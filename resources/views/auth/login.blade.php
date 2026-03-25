@@ -14,9 +14,7 @@
 
         <!-- Logo -->
         <div class="flex justify-center mb-4">
-            <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-                <span class="text-xs text-center font-semibold">LOGO</span>
-            </div>
+            <img src="{{ asset('images/logo.jpg') }}" class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center" alt="Hero Image">
         </div>
 
         <!-- Title -->
