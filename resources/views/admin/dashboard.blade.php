@@ -3,12 +3,32 @@
 @section('content')
 
 <!-- HEADER -->
-<div class="mb-6">
-    <h1 class="text-2xl font-semibold">Dashboard</h1>
-    <p class="text-sm text-gray-500">
-        Welcome back! Here's what's happening today.
-    </p>
+@section('header')
+
+<div class="flex justify-between items-center">
+    <div>
+        <h1 class="text-3xl font-semibold">Dashboard</h1>
+        <p class="text-sm text-gray-500">
+            Welcome back, {{ $admin->name ?? 'Admin' }}! Here's what's happening today.
+        </p>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="relative w-64">
+        <div class="absolute inset-y-0 left-3 flex items-center text-gray-400">
+            <i data-feather="search" class="w-4 h-4"></i>
+        </div>
+
+        <input 
+            type="text"
+            placeholder="Search..."
+            class="w-full pl-10 pr-4 py-2 rounded-xl bg-gray-100 
+                   focus:outline-none focus:ring-2 focus:ring-pink-300 
+                   text-sm placeholder-gray-400">
+    </div>
 </div>
+
+@endsection
 
 <!-- CARDS -->
 <div class="grid md:grid-cols-4 gap-4 mb-6">
@@ -60,7 +80,7 @@
 </div>
 
 <!-- RECENT ORDERS -->
-<div class="bg-white rounded-xl shadow p-5">
+<div class="bg-white rounded-2xl shadow p-4" style="border:solid #00000010; border-radius: 14px; border-width: 0.8px;">
 
     <div class="flex justify-between items-center mb-4">
         <div>
@@ -90,8 +110,8 @@
                 $detail = $order->orderDetails->first();
             @endphp
 
-            <tr class="py-3">
-                <td>#ORD-{{ str_pad($order->order_id, 3, '0', STR_PAD_LEFT) }}</td>
+            <tr class="hover:bg-gray-50">
+                <td class="py-3">#ORD-{{ str_pad($order->order_id, 3, '0', STR_PAD_LEFT) }}</td>
                 <td>{{ $order->customer_name }}</td>
 
                 <!-- SERVICE (Product Name) -->
@@ -101,14 +121,18 @@
 
                 <!-- STATUS BADGE -->
                 <td>
-                    @if($order->status == 'completed')
-                        <span class="bg-green-100 text-green-600 px-2 py-1 rounded-full text-xs">Completed</span>
-                    @elseif($order->status == 'pending')
-                        <span class="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-xs">Pending</span>
+                    @if($order->status == 'pending')
+                        <span class="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-clock"></i> Pending</span>
                     @elseif($order->status == 'in_progress')
-                        <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs">In Progress</span>
+                        <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-spinner"></i> In Progress</span>
+                    @elseif($order->status == 'ready_for_pickup')
+                        <span class="bg-purple-100 text-purple-600 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-box"></i> Ready for Pickup</span>
+                    @elseif($order->status == 'out_for_delivery')
+                        <span class="bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-truck"></i> Out for Delivery</span>
+                    @elseif($order->status == 'delivered')
+                        <span class="bg-green-100 text-green-600 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-house"></i> Delivered</span>
                     @else
-                        <span class="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs">Cancelled</span>
+                        <span class="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-times-circle"></i> Cancelled</span>
                     @endif
                 </td>
 

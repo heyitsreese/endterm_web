@@ -5,14 +5,15 @@
     <title>Admin - Sprint PHL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://kit.fontawesome.com/97c3b6d53c.js" crossorigin="anonymous"></script>
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-white">
 
 <div class="flex min-h-screen">
 
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-white border-r flex flex-col justify-between">
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col justify-between">
 
         <!-- TOP -->
         <div>
@@ -27,19 +28,16 @@
             <nav class="p-4 space-y-2 text-sm">
 
                 <!-- ACTIVE -->
-                <a href="dashboard" class="flex items-center gap-3 px-4 py-2 rounded-xl bg-pink-100 text-pink-600 font-medium">
-                    <i data-feather="grid"></i>
-                    Dashboard
+                <a href="{{ url('admin/dashboard') }}" class="flex items-center gap-3 px-4 py-2 rounded-xl {{ request()->is('admin/dashboard') ? 'bg-pink-100 text-pink-600 font-medium' : 'hover:bg-gray-100' }}">
+                    <i data-feather="grid"></i> Dashboard
                 </a>
 
                 <!-- ORDERS -->
-                <a href="#" class="flex items-center justify-between px-4 py-2 rounded-xl hover:bg-gray-100">
+                <a href="{{ url('admin/orders') }}" class="flex items-center justify-between px-4 py-2 rounded-xl {{ request()->is('admin/orders') ? 'bg-pink-100 text-pink-600 font-medium' : 'hover:bg-gray-100' }}">
                     <div class="flex items-center gap-3">
-                        <i data-feather="shopping-bag"></i>
-                        Orders
+                        <i data-feather="shopping-bag"></i> Orders
                     </div>
 
-                    <!-- BADGE -->
                     <span class="bg-pink-400 text-white text-xs px-2 py-0.5 rounded-full">
                         {{ $totalOrders ?? 0 }}
                     </span>
@@ -86,18 +84,17 @@
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 p-6">
+    <main class="flex-1">
 
-        <!-- TOPBAR -->
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-semibold">Dashboard</h1>
-
-            <input type="text"
-                   placeholder="Search..."
-                   class="border rounded-lg px-3 py-1 text-sm">
+        <!-- PAGE HEADER -->
+        <div class="px-6 py-4 border-b border-gray-200">
+            @yield('header')
         </div>
 
-        @yield('content')
+        <!-- PAGE CONTENT -->
+        <div class="p-6">
+            @yield('content')
+        </div>
 
     </main>
 
@@ -158,5 +155,26 @@
     feather.replace()
 </script>
 
+<script>
+function toggleDropdown(id) {
+    document.querySelectorAll('[id^="dropdown-"]').forEach(el => {
+        if (el.id !== 'dropdown-' + id) {
+            el.classList.add('hidden');
+        }
+    });
+
+    const el = document.getElementById('dropdown-' + id);
+    el.classList.toggle('hidden');
+}
+
+// Close when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.relative')) {
+        document.querySelectorAll('[id^="dropdown-"]').forEach(el => {
+            el.classList.add('hidden');
+        });
+    }
+});
+</script>
 </body>
 </html>

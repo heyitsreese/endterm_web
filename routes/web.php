@@ -19,6 +19,7 @@ Route::get('/login', function () {
     return view('auth.login');
 });
 
+// LOGIN 
 Route::post('/login', function (Request $request) {
 
     $user = \App\Models\User::where('email', $request->email)->first();
@@ -38,16 +39,24 @@ Route::post('/login', function (Request $request) {
 
 })->name('login');
 
+// ADMIN
 Route::middleware('admin.session')->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])
         ->name('admin.dashboard');
 });
 
+Route::get('admin/orders', [AdminController::class, 'orders']);
+
+Route::put('admin/orders/{id}/status', [AdminController::class, 'updateStatus'])
+    ->name('admin.orders.updateStatus');
+
+// LOGOUT
 Route::post('/logout', function () {
     session()->flush(); // clear session
     return redirect('/login');
 })->name('logout');
 
+// ORDERS
 Route::get('/order', function () {
     return view('order-page');
 })->name('order');
@@ -217,7 +226,3 @@ Route::get('/order/success/{token}', function ($token) {
 
 })->name('order.success');
 
-// Route::post('/logout', function () {
-//     Auth::logout();
-//     return redirect('/login');
-// })->name('logout');

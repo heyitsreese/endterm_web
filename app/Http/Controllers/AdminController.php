@@ -31,4 +31,41 @@ class AdminController extends Controller
             'admin' // ✅ ADD THIS
         ));
     }
+
+    public function orders()
+    {
+        $admin = User::where('user_id', session('user_id'))->first();
+
+        $orders = Order::with(['orderDetails.product'])->latest()->get();
+
+        $totalOrders = Order::count();
+        $pendingOrders = Order::where('status', 'pending')->count();
+        $inProgressOrders = Order::where('status', 'in_progress')->count();
+        $deliveredOrders = Order::where('status', 'delivered')->count();
+        $cancelledOrders = Order::where('status', 'cancelled')->count();
+
+        return view('admin.orders', compact(
+            'orders',
+            'totalOrders',
+            'pendingOrders',
+            'inProgressOrders',
+            'deliveredOrders',
+            'cancelledOrders',
+            'admin'
+        ));
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+
+        $request->validate([
+            'status' => 'required|string'
+        ]);
+
+        $order->status = $request->status;
+        $order->save();
+
+        return back()->with('success', 'Order status updated!');
+    }
 }
