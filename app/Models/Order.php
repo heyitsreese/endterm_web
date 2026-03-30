@@ -1,28 +1,26 @@
 <?php
 
 namespace App\Models;
+use App\Models\OrderDetail;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
+    protected $primaryKey = 'order_id';
 
-    public function payments()
-    {
-        return $this->hasMany(Payment::class, 'order_id');
-    }
+    protected $fillable = [
+        'customer_name',
+        'email',
+        'phone_number',
+        'status',
+        'total_amount',
+        'order_date',
+        'order_token',
+    ];
 
     public function orderDetails()
     {
         return $this->hasMany(OrderDetail::class, 'order_id');
-    }
-
-    public function files()
-    {
-        return $this->hasMany(FileUpload::class, 'order_id');
     }
 }
