@@ -26,13 +26,13 @@
             <a href="#">Services</a>
             <a href="#">Pricing</a>
             <a href="#">About</a>
-            <a href="#">Track Order</a>
+            <a href="/track-order" class="hover:text-pink-500 transition">Track Order</a>
         </div>
 
         <!-- Buttons -->
-        <div class="hidden md:flex gap-3">
-            <a href="/login" class="px-4 py-1 border rounded-lg text-sm">Sign In</a>
-            <button class="bg-pink-500 text-white px-4 py-1 rounded-lg text-sm">Order Now</button>
+        <div class="hidden md:flex gap-3 items-center">
+            <a href="/login" class="px-4 py-1.5 border rounded-lg text-sm hover:bg-gray-50 transition">Sign In</a>
+            <a href="/order" class="bg-pink-500 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-pink-600 transition">Order Now</a>
         </div>
 
         <!-- Burger Button -->
@@ -46,10 +46,10 @@
         <a href="#">Services</a>
         <a href="#">Pricing</a>
         <a href="#">About</a>
-        <a href="#">Track Order</a>
+        <a href="/track-order" class="hover:text-pink-500 transition">Track Order</a>
 
-        <a href="/login" class="border px-4 py-2 rounded-lg text-center">Sign In</a>
-        <button class="bg-pink-500 text-white px-4 py-2 rounded-lg">Order Now</button>
+        <a href="/login" class="border px-4 py-2 rounded-lg text-center hover:bg-gray-50 transition">Sign In</a>
+        <a href="/order" class="bg-pink-500 text-white px-4 py-2 rounded-lg text-center hover:bg-pink-600 transition">Order Now</a>
     </div>
 </nav>
 
@@ -63,13 +63,13 @@
             High-quality printing services for businesses and individuals.
         </p>
 
-        <div class="mt-6 flex gap-4">
-            <button class="bg-pink-500 text-white px-6 py-3 rounded-lg">
+        <div class="mt-6 flex gap-4 flex-wrap">
+            <a href="/order" class="bg-pink-500 text-white px-6 py-3 rounded-lg hover:bg-pink-600 transition font-medium inline-block">
                 Start Your Order →
-            </button>
-            <button class="bg-white px-6 py-3 rounded-lg border">
+            </a>
+            <a href="/track-order" class="bg-white px-6 py-3 rounded-lg border hover:bg-gray-50 transition text-gray-700 font-medium inline-block">
                 Track Existing Order
-            </button>
+            </a>
         </div>
 
         <div class="mt-6 flex gap-6 text-sm text-gray-600">
@@ -155,9 +155,9 @@
                 </ul>
 
                 <!-- Button -->
-                <button class="mt-5 w-full bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition">
+                <a href="/order" class="mt-5 block w-full text-center bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition font-medium">
                     Order Now
-                </button>
+                </a>
 
             </div>
         </div>
@@ -199,9 +199,9 @@
                 </ul>
 
                 <!-- Button -->
-                <button class="mt-5 w-full bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition">
+                <a href="/order" class="mt-5 block w-full text-center bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition font-medium">
                     Order Now
-                </button>
+                </a>
 
             </div>
         </div>
@@ -241,9 +241,9 @@
                 </ul>
 
                 <!-- Button -->
-                <button class="mt-5 w-full bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition">
+                <a href="/order" class="mt-5 block w-full text-center bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition font-medium">
                     Order Now
-                </button>
+                </a>
 
             </div>
         </div>
@@ -284,12 +284,9 @@
     <p class="mt-2">Order now without signing up</p>
 
     <div class="mt-6 flex justify-center gap-4">
-        <button class="bg-white text-pink-500 px-6 py-2 rounded-lg">
+        <a href="/order" class="bg-white text-pink-600 px-8 py-3 rounded-lg hover:bg-gray-50 transition font-bold shadow-sm inline-block">
             Quick Order
-        </button>
-        <!-- <button class="bg-gray-200 px-6 py-2 rounded-lg">
-            Sign Up
-        </button> -->
+        </a>
     </div>
 </section>
 
