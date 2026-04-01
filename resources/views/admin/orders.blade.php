@@ -152,7 +152,59 @@
 
                 <td>{{ $order->created_at->format('Y-m-d') }}</td>
                 <td>₱ {{ number_format($order->total_amount, 2) }}</td>
-                <td>⋮</td>
+                <td>
+                    <button onclick="toggleOrderExpand('{{ $order->order_id }}')"
+                        class="text-lg px-2 py-1 rounded hover:bg-gray-200">
+                        ⋮
+                    </button>
+                </td>
+            </tr>
+            
+            <tr id="expand-{{ $order->order_id }}" class="hidden bg-gray-50">
+                <td colspan="8" class="p-4">
+
+                    <div class="flex justify-between items-start">
+
+                        <!-- LEFT: ORDER DETAILS -->
+                        <div class="text-sm text-gray-600 space-y-1">
+                            <p><strong>Client:</strong> {{ $order->customer_name }}</p>
+                            <p><strong>Service:</strong> {{ $detail?->product?->product_name ?? 'N/A' }}</p>
+                            <p><strong>Quantity:</strong> {{ $detail?->quantity ?? 0 }}</p>
+                            <p><strong>Total:</strong> ₱ {{ number_format($order->total_amount, 2) }}</p>
+                        </div>
+
+                        <!-- RIGHT: ACTION BUTTONS -->
+                        <div class="flex gap-2">
+
+                            <!-- VIEW -->
+                            <a href="{{ route('admin.orders.show', $order->order_id) }}"
+                            class="px-3 py-2 text-sm bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200">
+                                View
+                            </a>
+
+                            <!-- EDIT -->
+                            <a href="{{ route('admin.orders.edit', $order->order_id) }}"
+                            class="px-3 py-2 text-sm bg-yellow-100 text-yellow-600 rounded-lg hover:bg-yellow-200">
+                                Edit
+                            </a>
+
+                            <!-- DELETE -->
+                            <form action="{{ route('admin.orders.destroy', $order->order_id) }}" method="POST">
+                                @csrf
+                                @method('DELETE')
+
+                                <button type="submit"
+                                    onclick="return confirm('Delete this order?')"
+                                    class="px-3 py-2 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200">
+                                    Delete
+                                </button>
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </td>
             </tr>
             @endforeach
             </tbody>

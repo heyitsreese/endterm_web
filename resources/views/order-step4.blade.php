@@ -1,3 +1,4 @@
+<!-- order-step4.blade.php -->
 @extends('layouts.content')
 
 @section('content')
@@ -29,7 +30,13 @@
     $discountedPrice = $basePrice - ($basePrice * $discountRate);
 
     $colorFee = $color === 'Full Color' ? 10 : 0;
-    $qualityFee = $paperQuality === 'Premium' ? 20 : 0;
+    $qualityFees = [
+        'Matte' => 0,
+        'Glossy' => -5,   // or 10 if you want higher
+        'Premium' => 20,
+    ];
+
+    $qualityFee = $qualityFees[$paperQuality] ?? 0;
 
     $finalPricePerUnit = $discountedPrice + $colorFee + $qualityFee;
 
@@ -160,6 +167,11 @@
                     <span>
                         {{ session('paper_size') == 'Custom' ? session('custom_size') : session('paper_size') }}
                     </span>
+                </div>
+
+                <div class="flex justify-between bg-gray-100 p-3 rounded-lg">
+                    <span><strong>Quality:</strong></span>
+                    <span>{{ session('paper_quality') }}</span>
                 </div>
 
                 <div class="flex justify-between bg-gray-100 p-3 rounded-lg">

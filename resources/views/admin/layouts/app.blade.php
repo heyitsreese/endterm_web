@@ -176,5 +176,108 @@ document.addEventListener('click', function(e) {
     }
 });
 </script>
+
+<script>
+function toggleOrderExpand(id) {
+    const row = document.getElementById('expand-' + id);
+
+    // Close all others (optional but nice UX)
+    document.querySelectorAll('[id^="expand-"]').forEach(r => {
+        if (r.id !== 'expand-' + id) {
+            r.classList.add('hidden');
+        }
+    });
+
+    // Toggle current
+    row.classList.toggle('hidden');
+}
+</script>
+
+<script>
+function calculateTotal() {
+    let total = 0;
+
+    document.querySelectorAll('.order-item').forEach(item => {
+        const productName = item.querySelector('.product-name').innerText.trim();
+        const quantity = parseInt(item.querySelector('.quantity-input').value) || 0;
+
+        const price = basePrices[productName] || 0;
+
+        total += price * quantity;
+    });
+
+    document.getElementById('totalAmount').value = total.toFixed(2);
+}
+
+// trigger on change
+document.querySelectorAll('.quantity-input').forEach(input => {
+    input.addEventListener('input', calculateTotal);
+});
+
+// initial compute
+calculateTotal();
+</script>
+
+<script>
+const basePrices = {
+    "Business Cards": 30,
+    "Flyers": 50,
+    "Posters": 20,
+    "Brochures": 70,
+    "Banners": 150,
+    "Booklets": 130
+};
+
+function calculateTotal() {
+    let total = 0;
+
+    document.querySelectorAll('.order-item').forEach(item => {
+
+        const productName = item.querySelector('.product-name').innerText.trim();
+        const quantity = parseInt(item.querySelector('.quantity-input').value) || 0;
+        const color = item.querySelector('.color-input').value;
+        const quality = item.querySelector('.quality-input').value;
+
+        let basePrice = basePrices[productName] || 0;
+
+        // discount
+        let discountRate = 0;
+        if (quantity >= 500) {
+            discountRate = 0.20;
+        } else if (quantity >= 100) {
+            discountRate = 0.10;
+        }
+
+        let discountedPrice = basePrice - (basePrice * discountRate);
+
+        // add-ons
+        let colorFee = (color === 'Full Color') ? 10 : 0;
+
+        const qualityFees = {
+            "Matte": 0,
+            "Glossy": -5,
+            "Premium": 20
+        };
+
+        let qualityFee = qualityFees[quality] || 0;
+
+        let finalPricePerUnit = discountedPrice + colorFee + qualityFee;
+
+        let subtotal = finalPricePerUnit * quantity;
+
+        total += subtotal;
+    });
+
+    document.getElementById('totalAmount').value = total.toFixed(2);
+}
+
+// listeners
+document.querySelectorAll('.quantity-input, .color-input, .quality-input')
+    .forEach(input => input.addEventListener('input', calculateTotal));
+
+// initial
+calculateTotal();
+</script>
+
 </body>
 </html>

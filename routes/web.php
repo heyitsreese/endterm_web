@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use Illuminate\Support\Str;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\OrderController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -39,16 +40,31 @@ Route::post('/login', function (Request $request) {
 
 })->name('login');
 
-// ADMIN
-Route::middleware('admin.session')->group(function () {
-    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])
-        ->name('admin.dashboard');
+// // ADMIN
+
+Route::prefix('admin')->name('admin.')->group(function () {
+
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])
+        ->name('dashboard');
+
+    Route::get('/orders', [AdminController::class, 'index'])
+        ->name('orders.index');
+
+    Route::get('/orders/{id}', [AdminController::class, 'show'])
+        ->name('orders.show');
+
+    Route::get('/orders/{id}/edit', [AdminController::class, 'edit'])
+        ->name('orders.edit');
+
+    Route::put('/orders/{id}', [AdminController::class, 'update'])
+        ->name('orders.update');
+
+    Route::delete('/orders/{id}', [AdminController::class, 'destroy'])
+        ->name('orders.destroy');
+
+    Route::put('/orders/{id}/status', [AdminController::class, 'updateStatus'])
+        ->name('orders.updateStatus');
 });
-
-Route::get('admin/orders', [AdminController::class, 'orders']);
-
-Route::put('admin/orders/{id}/status', [AdminController::class, 'updateStatus'])
-    ->name('admin.orders.updateStatus');
 
 // LOGOUT
 Route::post('/logout', function () {
@@ -180,6 +196,23 @@ Route::post('/order/store', function () {
         'order_token' => $token,
     ]);
 
+    // ✅ ORDER DETAILS
+    $files = session('files', []);
+
+    foreach ($files as $filePath) {
+
+        OrderDetail::create([
+            'order_id' => $order->order_id, // ✅ NOW VALID
+            'product_id' => $product->product_id,
+            'quantity' => $quantity,
+            'size' => $paperSize,
+            'color' => $color,
+            'paper_quality' => $paperQuality,
+            'special_instruction' => $instructions,
+            'file_path' => $filePath,
+        ]);
+    }
+
     $orderCode = 'ORD-' . str_pad($order->order_id, 4, '0', STR_PAD_LEFT);
 
     session()->forget([
@@ -194,18 +227,6 @@ Route::post('/order/store', function () {
         'email',
         'phone'
     ]);
-
-    // ✅ ORDER DETAILS
-    OrderDetail::create([
-        'order_id' => $order->order_id,
-        'product_id' => $product->product_id,
-        'quantity' => $quantity,
-        'size' => $paperSize,
-        'color' => $color,
-        'paper_quality' => $paperQuality,
-        'special_instruction' => $instructions,
-    ]);
-
     return redirect()->route('order.success', ['token' => $token]);
 })->name('order.store');
 

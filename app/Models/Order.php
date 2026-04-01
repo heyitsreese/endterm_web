@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     protected $primaryKey = 'order_id';
+    
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
         'customer_name',

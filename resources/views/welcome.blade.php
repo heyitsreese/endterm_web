@@ -13,9 +13,9 @@
         </p>
 
         <div class="mt-6 flex gap-4">
-            <button class="text-white px-6 py-3 rounded-lg" style="background-color: #D47497; font-weight: 500">
+            <a href="{{ url('/order') }}" class="text-white px-6 py-3 rounded-lg" style="background-color: #D47497; font-weight: 500">
                 Start Your Order <i class="fa-solid fa-arrow-right-long"></i>
-            </button>
+            </a>
             <button class="bg-white px-6 py-3 rounded-lg border" style="font-weight: 500">
                 Track Existing Order
             </button>
