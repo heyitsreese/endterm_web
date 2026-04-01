@@ -1,3 +1,5 @@
+<!-- welcome.blade.php -->
+
 @extends('layouts.content')
 
 @section('content')
@@ -16,9 +18,9 @@
             <a href="{{ url('/order') }}" class="text-white px-6 py-3 rounded-lg" style="background-color: #D47497; font-weight: 500">
                 Start Your Order <i class="fa-solid fa-arrow-right-long"></i>
             </a>
-            <button class="bg-white px-6 py-3 rounded-lg border" style="font-weight: 500">
+            <a href="{{ url('/track') }}" class="bg-white px-6 py-3 rounded-lg border" style="font-weight: 500">
                 Track Existing Order
-            </button>
+            </a>
         </div>
 
         <div class="mt-6 flex gap-6 text-sm text-gray-600">
@@ -60,7 +62,7 @@
 </section>
 
 <!-- SERVICES -->
-<section class="px-8 py-16">
+<section class="px-8 py-16" id="services">
     <h2 class="text-2xl font-bold text-center">Our Printing Services</h2>
     <p class="text-center text-gray-500 mb-10">
         Choose from our wide range of services
@@ -68,265 +70,61 @@
 
     <div class="grid md:grid-cols-3 gap-6">
 
-        <!-- CARD -->
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border">
+@foreach($products as $product)
 
-            <!-- Image -->
-            <img src="{{ asset('images/card.jpg') }}"
-                class="w-full h-44 object-cover"
-                alt="Business Cards">
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden border">
 
-            <!-- Content -->
-            <div class="p-5">
+    <!-- IMAGE -->
+    <img 
+        src="
+        @if($product->image)
+            {{ asset('storage/'.$product->image) }}
+        @elseif($product->category == 'Cards')
+            {{ asset('images/card.jpg') }}
+        @elseif($product->category == 'Marketing')
+            {{ asset('images/flyer.jpg') }}
+        @elseif($product->category == 'Large Format')
+            {{ asset('images/posters.jpg') }}
+        @else
+            {{ asset('images/default.jpg') }}
+        @endif
+        "
+        class="w-full h-44 object-cover">
 
-                <!-- Title + Price -->
-                <div class="flex justify-between items-center">
-                    <h3 class="font-semibold text-lg">Business Cards</h3>
-                    <span class="text-pink-500 text-sm font-medium">From ₱30</span>
-                </div>
+    <div class="p-5">
 
-                <!-- Description -->
-                <p class="text-sm text-gray-500 mt-2">
-                    Premium quality cards starting at ₱30
-                </p>
-
-                <!-- Features -->
-                <ul class="mt-4 space-y-2 text-sm text-gray-600">
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Full Color
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Multiple Finishes
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Fast Turnaround
-                    </li>
-                </ul>
-
-                <!-- Button -->
-                <button class="mt-5 w-full text-white py-2 rounded-lg hover:bg-pink-600 transition" style="background-color: #D47497;">
-                    Order Now
-                </button>
-
-            </div>
+        <!-- NAME + PRICE -->
+        <div class="flex justify-between items-center">
+            <h3 class="font-semibold text-lg">{{ $product->product_name }}</h3>
+            <span class="text-pink-500 text-sm font-medium">
+                From ₱{{ number_format($product->base_price, 2) }}
+            </span>
         </div>
 
-        <!-- FLYER -->
+        <!-- DESCRIPTION -->
+        <p class="text-sm text-gray-500 mt-2">
+            {{ $product->category }} printing service
+        </p>
 
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border">
+        <!-- FEATURES -->
+        <ul class="mt-4 space-y-2 text-sm text-gray-600">
+            <li>Min Qty: {{ $product->min_quantity }}</li>
+            <li>Turnaround: {{ $product->turnaround }}</li>
+        </ul>
 
-            <!-- Image -->
-            <img src="{{ asset('images/flyer.jpg') }}"
-                class="w-full h-44 object-cover"
-                alt="Business Cards">
+        <!-- BUTTON -->
+        <button class="mt-5 w-full text-white py-2 rounded-lg hover:bg-pink-600 transition"
+            style="background-color: #D47497;">
+            Order Now
+        </button>
 
-            <!-- Content -->
-            <div class="p-5">
-
-                <!-- Title + Price -->
-                <div class="flex justify-between items-center">
-                    <h3 class="font-semibold text-lg">Flyers & Leaflets</h3>
-                    <span class="text-pink-500 text-sm font-medium">From ₱50</span>
-                </div>
-
-                <!-- Description -->
-                <p class="text-sm text-gray-500 mt-2">
-                    Eye-catching designs for any occasion
-                </p>
-
-                <!-- Features -->
-                <ul class="mt-4 space-y-2 text-sm text-gray-600">
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> A4 & A5 Sizes
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Glossy/Matte
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Bulk Discounts
-                    </li>
-                </ul>
-
-                <!-- Button -->
-                <button class="mt-5 w-full text-white py-2 rounded-lg hover:bg-pink-600 transition" style="background-color: #D47497;">
-                    Order Now
-                </button>
-
-            </div>
-        </div>
-
-        <!-- BROCHURES -->
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border">
-
-            <!-- Image -->
-            <img src="{{ asset('images/brochures.jpg') }}"
-                class="w-full h-44 object-cover"
-                alt="Business Cards">
-
-            <!-- Content -->
-            <div class="p-5">
-
-                <!-- Title + Price -->
-                <div class="flex justify-between items-center">
-                    <h3 class="font-semibold text-lg">Brochures</h3>
-                    <span class="text-pink-500 text-sm font-medium">From ₱70</span>
-                </div>
-
-                <!-- Description -->
-                <p class="text-sm text-gray-500 mt-2">
-                    Professional multi-page brochures
-                </p>
-
-                <!-- Features -->
-                <ul class="mt-4 space-y-2 text-sm text-gray-600">
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Bi-fold/Tri-fold
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Premium Paper
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Custom Design
-                    </li>
-                </ul>
-
-                <!-- Button -->
-                <button class="mt-5 w-full text-white py-2 rounded-lg hover:bg-pink-600 transition" style="background-color: #D47497;">
-                    Order Now
-                </button>
-
-            </div>
-        </div>
-
-        <!-- Posters -->
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border">
-
-            <!-- Image -->
-            <img src="{{ asset('images/brochures.jpg') }}"
-                class="w-full h-44 object-cover"
-                alt="Business Cards">
-
-            <!-- Content -->
-            <div class="p-5">
-
-                <!-- Title + Price -->
-                <div class="flex justify-between items-center">
-                    <h3 class="font-semibold text-lg">Posters</h3>
-                    <span class="text-pink-500 text-sm font-medium">From ₱20</span>
-                </div>
-
-                <!-- Description -->
-                <p class="text-sm text-gray-500 mt-2">
-                    Large format printing for impact
-                </p>
-
-                <!-- Features -->
-                <ul class="mt-4 space-y-2 text-sm text-gray-600">
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Multiple Sizes
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Indoor/Outdoor
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Quick Delivery
-                    </li>
-                </ul>
-
-                <!-- Button -->
-                <button class="mt-5 w-full text-white py-2 rounded-lg hover:bg-pink-600 transition" style="background-color: #D47497;">
-                    Order Now
-                </button>
-
-            </div>
-        </div>
-
-        <!-- Banners -->
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border">
-
-            <!-- Image -->
-            <img src="{{ asset('images/brochures.jpg') }}"
-                class="w-full h-44 object-cover"
-                alt="Business Cards">
-
-            <!-- Content -->
-            <div class="p-5">
-
-                <!-- Title + Price -->
-                <div class="flex justify-between items-center">
-                    <h3 class="font-semibold text-lg">Banners</h3>
-                    <span class="text-pink-500 text-sm font-medium">From ₱150</span>
-                </div>
-
-                <!-- Description -->
-                <p class="text-sm text-gray-500 mt-2">
-                    Durable vinyl banners for events
-                </p>
-
-                <!-- Features -->
-                <ul class="mt-4 space-y-2 text-sm text-gray-600">
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Custom Sizes
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Weather Resistant
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Easy Setup
-                    </li>
-                </ul>
-
-                <!-- Button -->
-                <button class="mt-5 w-full text-white py-2 rounded-lg hover:bg-pink-600 transition" style="background-color: #D47497;">
-                    Order Now
-                </button>
-
-            </div>
-        </div>
-
-        <!-- Booklets -->
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border">
-
-            <!-- Image -->
-            <img src="{{ asset('images/brochures.jpg') }}"
-                class="w-full h-44 object-cover"
-                alt="Business Cards">
-
-            <!-- Content -->
-            <div class="p-5">
-
-                <!-- Title + Price -->
-                <div class="flex justify-between items-center">
-                    <h3 class="font-semibold text-lg">Booklets</h3>
-                    <span class="text-pink-500 text-sm font-medium">From ₱130</span>
-                </div>
-
-                <!-- Description -->
-                <p class="text-sm text-gray-500 mt-2">
-                    Perfect bound or stapled booklets
-                </p>
-
-                <!-- Features -->
-                <ul class="mt-4 space-y-2 text-sm text-gray-600">
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Color/B&W
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Multiple Pages
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fa-regular fa-circle-check fa-lg" style="color: green"></i> Professional Binding
-                    </li>
-                </ul>
-
-                <!-- Button -->
-                <button class="mt-5 w-full text-white py-2 rounded-lg hover:bg-pink-600 transition" style="background-color: #D47497;">
-                    Order Now
-                </button>
-
-            </div>
-        </div>
     </div>
+
+</div>
+
+@endforeach
+
+</div>
 </section>
 
 <!-- HOW IT WORKS -->

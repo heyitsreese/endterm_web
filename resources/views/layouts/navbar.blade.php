@@ -13,10 +13,9 @@
 
         <!-- Desktop Menu -->
         <div class="hidden md:flex gap-6 text-sm">
-            <a href="#">Services</a>
-            <a href="#">Pricing</a>
+            <a href="#services">Services</a>
             <a href="#">About</a>
-            <a href="#">Track Order</a>
+            <a href="{{ url ('/track') }}">Track Order</a>
         </div>
 
         <!-- Buttons -->
@@ -43,7 +42,7 @@
         <a href="#">Services</a>
         <a href="#">Pricing</a>
         <a href="#">About</a>
-        <a href="#">Track Order</a>
+        <a href="{{ url ('/track') }}">Track Order</a>
 
         <a href="{{ url('/login') }}" class="px-4 py-1 border rounded-lg text-sm text-center">
             Sign In

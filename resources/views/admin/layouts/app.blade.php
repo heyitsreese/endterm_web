@@ -48,7 +48,7 @@
                     Clients
                 </a>
 
-                <a href="#" class="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-gray-100">
+                <a href="{{ url('admin/products') }}" class="flex items-center gap-3 px-4 py-2 rounded-xl {{ request()->is('admin/products') ? 'bg-pink-100 text-pink-600 font-medium' : 'hover:bg-gray-100' }}">
                     <i data-feather="box"></i>
                     Products
                 </a>
@@ -277,6 +277,128 @@ document.querySelectorAll('.quantity-input, .color-input, .quality-input')
 
 // initial
 calculateTotal();
+</script>
+
+<script>
+function openAddModal() {
+    document.getElementById('addProductModal').classList.remove('hidden');
+    document.getElementById('addProductModal').classList.add('flex');
+}
+
+function closeAddModal() {
+    document.getElementById('addProductModal').classList.add('hidden');
+    document.getElementById('addProductModal').classList.remove('flex');
+}
+</script>
+
+<script>
+function openEditModal(button) {
+
+    const product = JSON.parse(button.dataset.product);
+
+    document.getElementById('editProductForm').action = `/admin/products/${product.product_id}`;
+
+    document.getElementById('edit_name').value = product.product_name;
+    document.getElementById('edit_price').value = product.base_price;
+    document.getElementById('edit_category').value = product.category;
+    document.getElementById('edit_min_quantity').value = product.min_quantity;
+    document.getElementById('edit_turnaround').value = product.turnaround;
+    document.getElementById('edit_status').value = product.status;
+
+    document.getElementById('editProductModal').classList.remove('hidden');
+    document.getElementById('editProductModal').classList.add('flex');
+}
+
+function closeEditModal() {
+    document.getElementById('editProductModal').classList.add('hidden');
+    document.getElementById('editProductModal').classList.remove('flex');
+}
+</script>
+
+<script>
+function openDeleteModal(button) {
+
+    const productId = button.dataset.id;
+
+    console.log(productId);
+
+    document.getElementById('deleteForm').action = `/admin/products/${productId}`;
+
+    document.getElementById('deleteModal').classList.remove('hidden');
+    document.getElementById('deleteModal').classList.add('flex');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+    document.getElementById('deleteModal').classList.remove('flex');
+}
+</script>
+
+<script>
+function openViewModal(button) {
+
+    const product = JSON.parse(button.dataset.product);
+
+    document.getElementById('view_name').innerText = product.product_name;
+    document.getElementById('view_category').innerText = product.category ?? 'N/A';
+    document.getElementById('view_price').innerText = parseFloat(product.base_price).toFixed(2);
+    document.getElementById('view_min').innerText = product.min_quantity;
+    document.getElementById('view_turnaround').innerText = product.turnaround;
+
+    const statusEl = document.getElementById('view_status');
+    statusEl.innerText = product.status;
+
+    // Dynamic color
+    if (product.status === 'active') {
+        statusEl.className = "bg-green-100 text-green-600 px-2 py-1 rounded-full text-xs";
+    } else {
+        statusEl.className = "bg-gray-200 text-gray-600 px-2 py-1 rounded-full text-xs";
+    }
+
+    document.getElementById('viewModal').classList.remove('hidden');
+    document.getElementById('viewModal').classList.add('flex');
+}
+
+function closeViewModal() {
+    document.getElementById('viewModal').classList.add('hidden');
+    document.getElementById('viewModal').classList.remove('flex');
+}
+</script>
+
+<script>
+document.getElementById('add_image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const preview = document.getElementById('add_preview');
+            preview.src = e.target.result;
+            preview.classList.remove('hidden');
+        };
+
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+
+<script>
+document.getElementById('edit_image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const preview = document.getElementById('edit_preview');
+            preview.src = e.target.result;
+            preview.classList.remove('hidden');
+        };
+
+        reader.readAsDataURL(file);
+    }
+});
 </script>
 
 </body>

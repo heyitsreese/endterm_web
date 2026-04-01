@@ -1,10 +1,12 @@
-<?php
+<?php // AdminController.php
 
 namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\User;
+use App\Models\Product;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
@@ -164,5 +166,107 @@ class AdminController extends Controller
 
         return redirect()->route('admin.orders.index')
             ->with('success', 'Updated!');
+    }
+
+    public function products(Request $request)
+    {
+        $query = Product::query();
+
+        if ($request->category && $request->category !== 'all') {
+            $query->where('category', $request->category);
+        }
+
+        if ($request->status && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        $products = $query->get();
+
+        $activeProducts = Product::where('status', 'active')->count();
+        $categoryList = Product::select('category')->distinct()->pluck('category');
+        $categoryCount = $categoryList->count();
+
+        return view('admin.products', compact(
+            'products',
+            'activeProducts',
+            'categoryList',
+            'categoryCount'
+        ));
+    }
+
+    public function storeProduct(Request $request)
+    {
+        $request->validate([
+            'product_name' => 'required|string|max:255',
+            'base_price' => 'required|numeric',
+            'category' => 'required|string',
+            'min_quantity' => 'required|integer',
+            'turnaround' => 'required|string',
+            'status' => 'required|string'
+        ]);
+
+       if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+        } else {
+            $imagePath = null;
+        }
+
+        Product::create([
+            'product_name' => $request->product_name,
+            'base_price' => $request->base_price,
+            'category' => $request->category,
+            'min_quantity' => $request->min_quantity,
+            'turnaround' => $request->turnaround,
+            'status' => $request->status,
+            'image' => $imagePath,
+        ]);
+
+        return back()->with('success', 'Product added successfully!');
+    }
+
+    public function updateProduct(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+
+        $request->validate([
+            'product_name' => 'required|string|max:255',
+            'base_price' => 'required|numeric',
+            'category' => 'required|string',
+            'min_quantity' => 'required|integer',
+            'turnaround' => 'required|string',
+            'status' => 'required|string'
+        ]);
+
+        if ($request->hasFile('image')) {
+
+            // delete old image (optional but good)
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+
+            $imagePath = $request->file('image')->store('products', 'public');
+        } else {
+            $imagePath = $product->image;
+        }
+
+        $product->update([
+            'product_name' => $request->product_name,
+            'base_price' => $request->base_price,
+            'category' => $request->category,
+            'min_quantity' => $request->min_quantity,
+            'turnaround' => $request->turnaround,
+            'status' => $request->status,
+            'image' => $imagePath,
+        ]);
+
+        return back()->with('success', 'Product updated!');
+    }
+
+    public function deleteProduct($id)
+    {
+        $product = Product::findOrFail($id);
+        $product->delete();
+
+        return back()->with('success', 'Product deleted successfully!');
     }
 }

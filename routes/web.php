@@ -12,8 +12,11 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\OrderController;
 
 Route::get('/', function () {
-    return view('welcome');
+    $products = Product::where('status', 'active')->latest()->get();
+    return view('welcome', compact('products'));
 });
+
+Route::get('/track', [OrderController::class, 'track'])->name('track');
 
 // LOGIN
 Route::get('/login', function () {
@@ -46,6 +49,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/dashboard', [AdminController::class, 'dashboard'])
         ->name('dashboard');
+    
+    Route::get('/products', [AdminController::class, 'products'])
+        ->name('products');
+    
+    Route::post('/products', [AdminController::class, 'storeProduct'])
+        ->name('products.store');
+
+    Route::put('/products/{id}', [AdminController::class, 'updateProduct'])
+        ->name('products.update');
+
+    Route::delete('/products/{id}', [AdminController::class, 'deleteProduct'])
+        ->name('products.delete');
 
     Route::get('/orders', [AdminController::class, 'index'])
         ->name('orders.index');
