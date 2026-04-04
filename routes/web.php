@@ -43,6 +43,8 @@ Route::post('/login', function (Request $request) {
 Route::middleware('admin.session')->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])
         ->name('admin.dashboard');
+    Route::get('/admin/settings', [AdminController::class, 'settings'])
+        ->name('admin.settings');
 });
 
 Route::get('admin/orders', [AdminController::class, 'orders']);

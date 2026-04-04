@@ -68,4 +68,14 @@ class AdminController extends Controller
 
         return back()->with('success', 'Order status updated!');
     }
+
+    public function settings()
+    {
+        $admin = User::where('user_id', session('user_id'))->first();
+
+        // Also fetch totalOrders to show badge in the sidebar
+        $totalOrders = Order::count();
+
+        return view('admin.settings', compact('admin', 'totalOrders'));
+    }
 }

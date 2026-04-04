@@ -53,7 +53,7 @@
                     Products
                 </a>
 
-                <a href="#" class="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-gray-100">
+                <a href="{{ url('admin/settings') }}" class="flex items-center gap-3 px-4 py-2 rounded-xl {{ request()->is('admin/settings') ? 'bg-pink-100 text-pink-600 font-medium' : 'hover:bg-gray-100' }}">
                     <i data-feather="settings"></i>
                     Settings
                 </a>
