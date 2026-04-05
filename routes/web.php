@@ -43,9 +43,9 @@ Route::post('/login', function (Request $request) {
 
 })->name('login');
 
-// // ADMIN
+// ADMIN
 
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/dashboard', [AdminController::class, 'dashboard'])
         ->name('dashboard');
@@ -79,6 +79,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::put('/orders/{id}/status', [AdminController::class, 'updateStatus'])
         ->name('orders.updateStatus');
+
+    Route::post('/orders/{id}/read', [AdminController::class, 'markAsRead'])
+        ->name('orders.read');
+
+    Route::get('/settings', [AdminController::class, 'settings'])
+        ->name('admin.settings');
+
+    Route::post('/settings/update', [AdminController::class, 'updateSettings'])
+        ->name('settings.update');
 });
 
 // LOGOUT

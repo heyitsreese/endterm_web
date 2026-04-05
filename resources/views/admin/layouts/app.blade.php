@@ -13,7 +13,10 @@
 <div class="flex min-h-screen">
 
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col justify-between">
+    <aside id="sidebar"
+    class="fixed z-50 inset-y-0 left-0 w-64 bg-white border-r border-gray-200 
+           transform -translate-x-full md:translate-x-0 transition-transform duration-300 
+           flex flex-col justify-between">
 
         <!-- TOP -->
         <div>
@@ -53,7 +56,7 @@
                     Products
                 </a>
 
-                <a href="#" class="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-gray-100">
+                <a href="{{ url('admin/settings') }}" class="flex items-center gap-3 px-4 py-2 rounded-xl {{ request()->is('admin/settings') ? 'bg-pink-100 text-pink-600 font-medium' : 'hover:bg-gray-100' }}">
                     <i data-feather="settings"></i>
                     Settings
                 </a>
@@ -83,17 +86,24 @@
 
     </aside>
 
+    <div id="sidebarOverlay" 
+        onclick="toggleSidebar()" 
+        class="fixed inset-0 bg-black bg-opacity-40 hidden z-40 md:hidden">
+    </div>
+
     <!-- MAIN CONTENT -->
-    <main class="flex-1">
+    <main class="flex-1 w-full md:ml-64 min-w-0">
 
         <!-- PAGE HEADER -->
-        <div class="px-6 py-4 border-b border-gray-200">
+        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
             @yield('header')
         </div>
 
         <!-- PAGE CONTENT -->
-        <div class="p-6">
-            @yield('content')
+        <div class="p-4 sm:p-6">
+            <div class="max-w-6xl mx-auto w-full">
+                @yield('content')
+            </div>
         </div>
 
     </main>
@@ -138,6 +148,29 @@
     </div>
 
 </div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    sidebar.classList.toggle('-translate-x-full');
+    overlay.classList.toggle('hidden');
+}
+
+// ✅ OUTSIDE (only once)
+window.addEventListener('resize', function () {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    if (window.innerWidth >= 768) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.add('hidden');
+    } else {
+        sidebar.classList.add('-translate-x-full');
+    }
+});
+</script>
 
 <script>
     function openLogoutModal() {
@@ -399,6 +432,48 @@ document.getElementById('edit_image').addEventListener('change', function(e) {
         reader.readAsDataURL(file);
     }
 });
+</script>
+
+<script>
+function toggleDay(checkbox) {
+    const row = checkbox.closest('.day-row');
+    const inputs = row.querySelectorAll('.time-input');
+    inputs.forEach(input => {
+        input.disabled = !checkbox.checked;
+    });
+}
+</script>
+
+<script>
+function toggleNotif() {
+    const dropdown = document.getElementById('notifDropdown');
+    dropdown.classList.toggle('hidden');
+}
+
+// optional: close when clicking outside
+document.addEventListener('click', function (e) {
+    const dropdown = document.getElementById('notifDropdown');
+    const button = e.target.closest('button');
+
+    if (!e.target.closest('#notifDropdown') && !button) {
+        dropdown.classList.add('hidden');
+    }
+});
+</script>
+
+<script>
+function markAsRead(orderId) {
+    fetch(`/admin/orders/${orderId}/read`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(() => {
+        location.reload(); // simple refresh (we can improve later)
+    });
+}
 </script>
 
 </body>

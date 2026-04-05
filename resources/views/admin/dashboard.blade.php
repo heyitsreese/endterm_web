@@ -5,26 +5,65 @@
 <!-- HEADER -->
 @section('header')
 
-<div class="flex justify-between items-center">
-    <div>
-        <h1 class="text-3xl font-semibold">Dashboard</h1>
-        <p class="text-sm text-gray-500">
-            Welcome back, {{ $admin->name ?? 'Admin' }}! Here's what's happening today.
-        </p>
+<div class="flex items-center justify-between gap-4">
+    
+    <!-- LEFT SIDE -->
+    <div class="flex items-center gap-3">
+
+        <!-- 🍔 HAMBURGER BUTTON -->
+        <button onclick="toggleSidebar()" class="md:hidden text-gray-600">
+            <i data-feather="menu"></i>
+        </button>
+
+        <!-- TITLE -->
+        <div>
+            <h1 class="text-3xl font-semibold">Dashboard</h1>
+            <p class="text-sm text-gray-500">
+                Welcome back, {{ $admin->name ?? 'Admin' }}! Here's what's happening today.
+            </p>
+        </div>
+
     </div>
 
     <!-- SEARCH -->
-    <div class="relative w-64">
-        <div class="absolute inset-y-0 left-3 flex items-center text-gray-400">
-            <i data-feather="search" class="w-4 h-4"></i>
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 w-full sm:w-auto">
+        <div class="relative w-full sm:w-64">
+            <div class="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                <i data-feather="search" class="w-4 h-4"></i>
+            </div>
+            <input 
+                type="text"
+                placeholder="Search..."
+                class="w-full pl-10 pr-4 py-2 rounded-xl bg-gray-50 border border-transparent
+                       focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white
+                       text-sm text-gray-600 placeholder-gray-400 font-medium">
         </div>
+        <div class="relative">
+            <button onclick="toggleNotif()" class="text-gray-500 hover:text-gray-700 transition">
+                <i data-feather="bell" class="w-5 h-5"></i>
 
-        <input 
-            type="text"
-            placeholder="Search..."
-            class="w-full pl-10 pr-4 py-2 rounded-xl bg-gray-100 
-                   focus:outline-none focus:ring-2 focus:ring-pink-300 
-                   text-sm placeholder-gray-400">
+                @if($unreadOrdersCount > 0)
+                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                        {{ $unreadOrdersCount }}
+                    </span>
+                @endif
+            </button>
+
+            <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-xl p-4 z-50">
+                <h3 class="font-semibold mb-2 text-sm">Recent Orders</h3>
+
+                @forelse($recentOrders as $order)
+                    <div data-id="{{ $order->order_id }}"
+                        onclick="markAsRead(this.dataset.id)"
+                        class="border-b py-2 text-xs text-gray-600 cursor-pointer hover:bg-gray-50 rounded px-2">
+                        
+                        Order #{{ $order->order_id }} - {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                    </div>
+                @empty
+                    <p class="text-gray-400 text-xs">No recent orders</p>
+                @endforelse
+            </div>
+        </div>
     </div>
 </div>
 

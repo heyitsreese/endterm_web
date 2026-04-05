@@ -13,10 +13,11 @@ class AdminController extends Controller
     public function dashboard()
     {
         $admin = User::where('user_id', session('user_id'))->first();
-
         $totalOrders = Order::count();
         $revenue = Order::sum('total_amount');
         $pendingOrders = Order::where('status', 'pending')->count();
+
+        $unreadOrdersCount = Order::where('is_read', false)->count();
         $activeClients = Order::distinct('email')->count('email');
 
         $recentOrders = Order::with(['orderDetails.product'])
@@ -30,7 +31,8 @@ class AdminController extends Controller
             'pendingOrders',
             'activeClients',
             'recentOrders',
-            'admin' // ✅ ADD THIS
+            'admin',
+            'unreadOrdersCount'
         ));
     }
 
@@ -45,6 +47,11 @@ class AdminController extends Controller
         $inProgressOrders = Order::where('status', 'in_progress')->count();
         $deliveredOrders = Order::where('status', 'delivered')->count();
         $cancelledOrders = Order::where('status', 'cancelled')->count();
+        $unreadOrdersCount = Order::where('is_read', false)->count();
+        $recentOrders = Order::with(['orderDetails.product'])
+            ->latest()
+            ->take(5)
+            ->get();
 
         return view('admin.orders', compact(
             'orders',
@@ -53,7 +60,9 @@ class AdminController extends Controller
             'inProgressOrders',
             'deliveredOrders',
             'cancelledOrders',
-            'admin'
+            'admin',
+            'unreadOrdersCount',
+            'recentOrders'
         ));
     }
 
@@ -186,11 +195,22 @@ class AdminController extends Controller
         $categoryList = Product::select('category')->distinct()->pluck('category');
         $categoryCount = $categoryList->count();
 
+        $unreadOrdersCount = Order::where('is_read', false)->count();
+        $totalOrders = Order::count();
+        $recentOrders = Order::with(['orderDetails.product'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+
         return view('admin.products', compact(
             'products',
             'activeProducts',
             'categoryList',
-            'categoryCount'
+            'categoryCount',
+            'recentOrders',
+            'totalOrders',
+            'unreadOrdersCount',
         ));
     }
 
@@ -268,5 +288,54 @@ class AdminController extends Controller
         $product->delete();
 
         return back()->with('success', 'Product deleted successfully!');
+    }
+
+    public function settings()
+    {
+        $admin = User::where('user_id', session('user_id'))->first();
+
+        $totalOrders = Order::count(); // ✅ ADD THIS
+
+        $recentOrders = Order::with(['orderDetails.product'])
+            ->latest()
+            ->take(5)
+            ->get();
+        $unreadOrdersCount = Order::where('is_read', false)->count();
+
+        return view('admin.settings', compact(
+            'admin',
+            'totalOrders',
+            'recentOrders',
+            'unreadOrdersCount'
+        ));
+    }
+
+    public function updateSettings(Request $request)
+    {
+        $admin = User::where('user_id', session('user_id'))->first();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        $admin->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ]);
+
+        return back()->with('success', 'Settings updated successfully!');
+    }
+
+    public function markAsRead($id)
+    {
+        $order = Order::where('order_id', $id)->firstOrFail();
+
+        $order->is_read = true;
+        $order->save();
+
+        return response()->json(['success' => true]);
     }
 }
