@@ -1,4 +1,4 @@
-# 📦 E-Commerce Management System
+# 📦 Sprint PHL
 
 ## 📖 Overview
 This project is a web-based **E-Commerce Management System** that allows users to browse products and track orders, while providing administrators with tools to manage products, categories, and orders efficiently.
@@ -8,7 +8,6 @@ This project is a web-based **E-Commerce Management System** that allows users t
 ## 🚀 Features
 
 ### 👤 User Features
-- User registration and login
 - Browse and filter products by category
 - Track order status (Pending, Processing, Shipped, Delivered)
 - View order history
