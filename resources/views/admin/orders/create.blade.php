@@ -673,16 +673,30 @@ document.addEventListener('DOMContentLoaded', function () {
             let value = this.dataset.value;
 
             const input = document.getElementById('paper_size');
-            if (input) input.value = value;
-
             const customBox = document.getElementById('custom-size-input');
+            const customSizeField = document.querySelector('[name="custom_size"]');
+
+            if (input) input.value = value;
 
             if (customBox) {
                 if (value === 'Custom') {
                     customBox.classList.remove('hidden');
                 } else {
                     customBox.classList.add('hidden');
+                    // Clear custom size when switching away
+                    if (customSizeField) customSizeField.value = '';
                 }
+            }
+            
+            if (customSizeField) {
+                customSizeField.addEventListener('input', function () {
+                    const paperSizeInput = document.getElementById('paper_size');
+                    if (paperSizeInput && this.value.trim() !== '') {
+                        paperSizeInput.value = 'Custom - ' + this.value.trim();
+                    } else if (paperSizeInput) {
+                        paperSizeInput.value = 'Custom';
+                    }
+                });
             }
         });
     });

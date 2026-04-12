@@ -5,69 +5,15 @@
 
 <!-- HEADER -->
 @section('header')
-
-<div class="flex items-center justify-between gap-4">
-    
-    <!-- LEFT SIDE -->
-    <div class="flex items-center gap-3">
-
-        <!-- 🍔 HAMBURGER BUTTON -->
-        <button onclick="toggleSidebar()" class="md:hidden text-gray-600">
-            <i data-feather="menu"></i>
-        </button>
-
-        <!-- TITLE -->
-        <div>
-            <h1 class="text-3xl font-semibold">Orders</h1>
-            <p class="text-sm text-gray-500">
-                Manage all your printing orders.
-            </p>
-        </div>
-
-    </div>
-
-    <!-- SEARCH -->
-    <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 w-full sm:w-auto">
-        <div class="relative w-full sm:w-64">
-            <div class="absolute inset-y-0 left-3 flex items-center text-gray-400">
-                <i data-feather="search" class="w-4 h-4"></i>
-            </div>
-            <input 
-                type="text"
-                placeholder="Search..."
-                class="w-full pl-10 pr-4 py-2 rounded-xl bg-gray-50 border border-transparent
-                       focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white
-                       text-sm text-gray-600 placeholder-gray-400 font-medium">
-        </div>
-        <div class="relative inline-block">
-            <button onclick="toggleNotif()" class="text-gray-500 hover:text-gray-700 transition">
-                <i data-feather="bell" class="w-5 h-5"></i>
-
-                @if($unreadOrdersCount > 0)
-                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                        {{ $unreadOrdersCount }}
-                    </span>
-                @endif
-            </button>
-
-            <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-xl p-4 z-50">
-                <h3 class="font-semibold mb-2 text-sm">Recent Orders</h3>
-
-                @forelse($pendingNotifications as $order)
-                    <div data-id="{{ $order->order_id }}"
-                        onclick="markAsRead(this.dataset.id)"
-                        class="border-b py-2 text-xs text-gray-600 cursor-pointer hover:bg-gray-50 rounded px-2">
-                        
-                        Order #{{ $order->order_id }} - {{ ucfirst(str_replace('_', ' ', $order->status)) }}
-                    </div>
-                @empty
-                    <p class="text-gray-400 text-xs">No recent orders</p>
-                @endforelse
-            </div>
-        </div>
+<div class="flex items-center gap-2 min-w-0">
+    <button onclick="toggleSidebar()" class="md:hidden text-gray-600 shrink-0">
+        <i data-feather="menu"></i>
+    </button>
+    <div class="min-w-0">
+        <h1 class="text-lg sm:text-2xl font-semibold truncate">Orders</h1>
+        <p class="text-xs text-gray-500 hidden sm:block">Manage all your printing orders.</p>
     </div>
 </div>
-
 @endsection
 
 <div class="flex justify-end items-center mb-2">
@@ -84,37 +30,39 @@
             </a>
         </div>
 
+@if(request('search'))
+    <div class="mb-4 px-4 py-2 bg-pink-50 border border-pink-200 rounded-xl text-sm text-pink-600 flex justify-between items-center">
+        <span>Showing results for: <strong>{{ request('search') }}</strong></span>
+        <a href="{{ url('admin/orders') }}" class="text-xs underline text-pink-400 hover:text-pink-600">Clear search</a>
+    </div>
+@endif
 <h2 class="text-lg font-semibold mt-10 mb-4">
     Current Orders
 </h2>
 
 <!-- TABS -->
-<div class="flex gap-2 mb-4 text-sm">
-    <span class="px-4 py-1 text-pink-600" style="background-color: #EEF2FF; border: solid #C6D2FF 0.8px; border-radius: 8px" >
-        All Orders ({{ $totalOrders }})
+<div class="flex flex-wrap gap-2 mb-4 text-sm">
+    <span class="px-3 py-1 text-pink-600 text-xs" style="background-color: #EEF2FF; border: solid #C6D2FF 0.8px; border-radius: 8px">
+        All ({{ $totalOrders }})
     </span>
-
-    <span class="px-4 py-1 bg-gray-100" style="background-color: #FFFFFF; border: solid #00000010 0.8px; border-radius: 8px">
+    <span class="px-3 py-1 text-xs" style="background-color: #FFFFFF; border: solid #00000010 0.8px; border-radius: 8px">
         Pending ({{ $pendingOrders }})
     </span>
-
-    <span class="px-4 py-1 bg-gray-100" style="background-color: #FFFFFF; border: solid #00000010 0.8px; border-radius: 8px">
+    <span class="px-3 py-1 text-xs" style="background-color: #FFFFFF; border: solid #00000010 0.8px; border-radius: 8px">
         In Progress ({{ $inProgressOrders }})
     </span>
-
-    <span class="px-4 py-1 bg-gray-100" style="background-color: #FFFFFF; border: solid #00000010 0.8px; border-radius: 8px">
+    <span class="px-3 py-1 text-xs" style="background-color: #FFFFFF; border: solid #00000010 0.8px; border-radius: 8px">
         Completed ({{ $completedOrders->count() }})
     </span>
-
-    <span class="px-4 py-1 bg-gray-100" style="background-color: #FFFFFF; border: solid #00000010 0.8px; border-radius: 8px">
+    <span class="px-3 py-1 text-xs" style="background-color: #FFFFFF; border: solid #00000010 0.8px; border-radius: 8px">
         Declined ({{ $declinedOrdersCount }})
     </span>
 </div>
 
 <!-- TABLE -->
 <div class="bg-white rounded-2xl shadow p-4" style="border:solid #00000010; border-radius: 14px; border-width: 0.8px;">
-    <div class="max-h-[500px] overflow-y-auto overflow-x-visible">
-        <table class="w-full text-sm">
+    <div class="overflow-x-auto overflow-y-auto" style="max-height: 500px;">
+        <table class="w-full text-sm" style="min-width: 650px;">
             <thead class="text-left text-gray-500 border-b">
                 <tr>
                     <th class="py-3">Order ID</th>
@@ -265,9 +213,10 @@
                     </td>
                 </tr>
                 @endforeach
-                </tbody>
+            </tbody>
         </table>
     </div>
+</div>
 
     <div id="deleteModal"
      class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
@@ -305,8 +254,8 @@
 </h2>
 
 <div class="bg-white rounded-2xl shadow p-4 mt-6" style="border:solid #00000010; border-radius: 14px; border-width: 0.8px;">
-    <div class="max-h-[500px] overflow-y-auto overflow-x-visible">
-        <table class="w-full text-sm">
+    <div class="overflow-x-auto overflow-y-auto" style="max-height: 500px;">
+        <table class="w-full text-sm" style="min-width: 650px;">
             <thead class="text-left text-gray-500 border-b">
                 <tr>
                     <th class="py-3">Order ID</th>
@@ -421,8 +370,8 @@
 </h2>
 
 <div class="bg-white rounded-2xl shadow p-4 mt-6" style="border:solid #00000010; border-radius: 14px; border-width: 0.8px;">
-    <div class="max-h-[500px] overflow-y-auto overflow-x-visible">
-        <table class="w-full text-sm">
+    <div class="overflow-x-auto overflow-y-auto" style="max-height: 500px;">
+        <table class="w-full text-sm" style="min-width: 650px;">
             <thead class="text-left text-gray-500 border-b">
                 <tr>
                     <th class="py-3">Order ID</th>

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Sprint PHL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/feather-icons"></script>
@@ -9,15 +10,15 @@
     <link rel="icon" type="image" href="{{ asset('images/logo.png') }}">
 </head>
 
-<body class="bg-white">
+<body class="bg-white overflow-x-hidden">
 
-<div class="flex min-h-screen">
+<div class="flex min-h-screen overflow-hidden">
 
     <!-- SIDEBAR -->
     <aside id="sidebar"
-    class="fixed z-50 inset-y-0 left-0 w-64 bg-white border-r border-gray-200 
-           transform -translate-x-full md:translate-x-0 transition-transform duration-300 
-           flex flex-col justify-between">
+            class="fixed z-50 inset-y-0 left-0 w-64 bg-white border-r border-gray-200 
+                transform -translate-x-full md:translate-x-0 transition-transform duration-300 
+                flex flex-col justify-between">
 
         <!-- TOP -->
         <div>
@@ -93,18 +94,65 @@
     </div>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 w-full md:ml-64 min-w-0">
+    <main class="flex-1 w-full md:ml-64 min-w-0 overflow-x-hidden max-w-full">
 
         <!-- PAGE HEADER -->
-        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-            @yield('header')
+        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 overflow-x-hidden">
+            <div class="flex items-center justify-between gap-2">
+
+                <!-- PAGE TITLE (from each page's @section('header')) -->
+                <div class="flex-1 min-w-0">
+                    @yield('header')
+                </div>
+
+                <!-- GLOBAL: search + bell -->
+                <div class="flex items-center gap-2 shrink-0">
+                    <form action="{{ url('admin/orders') }}" method="GET" class="relative">
+                        <div class="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                            <i data-feather="search" class="w-4 h-4"></i>
+                        </div>
+                        <input type="text" name="search" placeholder="Search..."
+                                value="{{ request('search') }}"
+                                class="pl-9 pr-3 py-2 rounded-xl bg-gray-50 border border-transparent
+                                    focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white
+                                    text-sm text-gray-600 placeholder-gray-400 font-medium
+                                    transition-all"
+                                style="width: clamp(80px, 25vw, 224px);">
+                    </form>
+
+                    <div class="relative shrink-0">
+                        <button id="notifBtn" class="text-gray-500 hover:text-gray-700 transition relative">
+                            <i data-feather="bell" class="w-5 h-5"></i>
+                            @if(($unreadOrdersCount ?? 0) > 0)
+                                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                                    {{ $unreadOrdersCount }}
+                                </span>
+                            @endif
+                        </button>
+                        <div id="notifDropdown" class="hidden fixed top-14 right-2 w-64 bg-white shadow-lg rounded-xl p-4 z-[999]">
+                            <h3 class="font-semibold mb-2 text-sm">Recent Orders</h3>
+                            @forelse($pendingNotifications ?? [] as $order)
+                                <div data-id="{{ $order->order_id }}"
+                                    onclick="markAsRead(this.dataset.id)"
+                                    class="border-b py-2 text-xs text-gray-600 cursor-pointer hover:bg-gray-50 rounded px-2">
+                                    Order #{{ $order->order_id }} - {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                                </div>
+                            @empty
+                                <p class="text-gray-400 text-xs">No recent orders</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
 
         <!-- PAGE CONTENT -->
         <div class="p-4 sm:p-6">
-            <div class="max-w-6xl mx-auto w-full">
+            <div class="w-full max-w-full">
                 @yield('content')
             </div>
+        </div>
         </div>
 
     </main>
@@ -168,7 +216,11 @@ window.addEventListener('resize', function () {
         sidebar.classList.remove('-translate-x-full');
         overlay.classList.add('hidden');
     } else {
-        sidebar.classList.add('-translate-x-full');
+        // Only close if it was manually opened (overlay is visible)
+        if (!overlay.classList.contains('hidden')) {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        }
     }
 });
 </script>
@@ -357,18 +409,23 @@ function toggleDay(checkbox) {
 </script>
 
 <script>
-function toggleNotif() {
-    const dropdown = document.getElementById('notifDropdown');
-    dropdown.classList.toggle('hidden');
-}
+const notifBtn = document.getElementById('notifBtn');
+const notifDropdown = document.getElementById('notifDropdown');
 
-// optional: close when clicking outside
-document.addEventListener('click', function (e) {
-    const dropdown = document.getElementById('notifDropdown');
-    const button = e.target.closest('button');
+notifBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    
+    // Position dropdown below the bell button
+    const rect = notifBtn.getBoundingClientRect();
+    notifDropdown.style.top = (rect.bottom + 8) + 'px';
+    notifDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+    
+    notifDropdown.classList.toggle('hidden');
+});
 
-    if (!e.target.closest('#notifDropdown') && !button) {
-        dropdown.classList.add('hidden');
+document.addEventListener('click', function(e) {
+    if (!notifDropdown.contains(e.target) && e.target !== notifBtn) {
+        notifDropdown.classList.add('hidden');
     }
 });
 </script>

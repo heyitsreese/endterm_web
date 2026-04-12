@@ -22,8 +22,8 @@ class OrderDetail extends Model
         'paper_quality',
         'special_instruction',
         'file_path',
-        'price',         // ← add
-        'subtotal',      // ← add
+        'price',       
+        'subtotal',     
     ];
 
     public function order()

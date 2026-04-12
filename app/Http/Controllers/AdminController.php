@@ -45,6 +45,33 @@ class AdminController extends Controller
         ->take(5)
         ->get();
 
+        $last7Days = collect(range(6, 0))->map(fn($i) => Carbon::now()->subDays($i)->toDateString());
+ 
+        $dailyStats = Order::whereIn('status', ['delivered', 'picked_up'])
+            ->where('created_at', '>=', Carbon::now()->subDays(6)->startOfDay())
+            ->selectRaw('DATE(created_at) as date, SUM(total_amount) as total_sales, COUNT(*) as order_count')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->keyBy('date');
+        
+        // Build a complete 7-day array (fill 0 for missing days)
+        $dailySalesChart = $last7Days->map(fn($date) => [
+            'date'        => $date,
+            'label'       => Carbon::parse($date)->format('M d'),
+            'total_sales' => $dailyStats->get($date)?->total_sales ?? 0,
+            'order_count' => $dailyStats->get($date)?->order_count ?? 0,
+        ]);
+        
+        // REPORTS: Most requested services (top 5 products by quantity)
+        $topServices = OrderDetail::with('product')
+            ->whereHas('order', fn($q) => $q->whereIn('status', ['delivered', 'picked_up']))
+            ->selectRaw('product_id, SUM(quantity) as total_qty, COUNT(*) as order_count')
+            ->groupBy('product_id')
+            ->orderByDesc('total_qty')
+            ->take(5)
+            ->get();
+
         return view('admin.dashboard', compact(
             'totalOrders',
             'revenue',
@@ -53,21 +80,44 @@ class AdminController extends Controller
             'pendingNotifications',
             'recentOrders',
             'admin',
-            'unreadOrdersCount'
+            'unreadOrdersCount',
+            'dailySalesChart',
+            'topServices',
         ));
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->input('search');
+        $id = $search ? (int) preg_replace('/[^0-9]/', '', $search) : null;
+
         $admin = User::where('user_id', session('user_id'))->first();
 
         $orders = Order::with(['orderDetails.product'])
             ->whereNotIn('status', ['declined', 'delivered', 'picked_up'])
+            ->when($search, function ($q) use ($search, $id) {
+                $q->where(function ($q2) use ($search, $id) {
+                    if ($id) {
+                        $q2->where('order_id', $id);
+                    }
+                    $q2->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
             ->latest()
             ->get();
 
         $declinedOrders = Order::with(['orderDetails.product'])
             ->where('status', 'declined')
+            ->when($search, function ($q) use ($search, $id) {
+                $q->where(function ($q2) use ($search, $id) {
+                    if ($id) {
+                        $q2->where('order_id', $id);
+                    }
+                    $q2->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
             ->latest()
             ->get();
 
@@ -92,6 +142,15 @@ class AdminController extends Controller
         $inProgressOrders = Order::where('status', 'in_progress')->count();
         $completedOrders = Order::with(['orderDetails.product'])
             ->whereIn('status', ['delivered', 'picked_up'])
+            ->when($search, function ($q) use ($search, $id) {
+                $q->where(function ($q2) use ($search, $id) {
+                    if ($id) {
+                        $q2->where('order_id', $id);
+                    }
+                    $q2->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
             ->latest()
             ->get();
         $declinedOrdersCount = Order::where('status', 'declined')->count();

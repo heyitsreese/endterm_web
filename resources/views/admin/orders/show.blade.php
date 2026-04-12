@@ -106,8 +106,13 @@
                             </td>
 
                             <!-- PAPER QUALITY -->
-                             <td class="p-3 text-center align-middle">
+                            <td class="p-3 text-center align-middle">
                                 {{ $detail->size ?? 'N/A' }}
+                                @if(str_starts_with($detail->size ?? '', 'Custom'))
+                                    <span class="block text-xs text-gray-400">
+                                        {{ str_replace('Custom - ', '', $detail->size) }}
+                                    </span>
+                                @endif
                             </td>
 
                             <!-- INSTRUCTIONS -->
