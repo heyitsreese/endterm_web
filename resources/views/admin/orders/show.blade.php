@@ -123,10 +123,23 @@
                             <!-- FILE -->
                             <td class="p-3 text-center align-middle">
                                 @php
-                                    $files = is_string($detail->file_path) 
-                                        ? json_decode($detail->file_path, true) 
-                                        : ($detail->file_path ?? []);
-                                    $files = $files ?? [];
+                                    $files = [];
+
+                                    if (!empty($detail->file_path)) {
+
+                                        // Try decode JSON
+                                        $decoded = json_decode($detail->file_path, true);
+
+                                        if (is_array($decoded)) {
+                                            $files = $decoded; // multiple files
+                                        } else {
+                                            // single file fallback
+                                            $files = [[
+                                                'path' => $detail->file_path,
+                                                'name' => basename($detail->file_path)
+                                            ]];
+                                        }
+                                    }
                                 @endphp
 
                                 @if(count($files) > 0)

@@ -2,14 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Product;
 use App\Models\Order;
-use App\Models\OrderDetail;
-use Illuminate\Support\Str;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ClientController;
 
 Route::get('/', function () {
     $products = Product::where('status', 'active')->latest()->get();
@@ -17,6 +16,9 @@ Route::get('/', function () {
 });
 
 Route::get('/track', [OrderController::class, 'track'])->name('track');
+
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register']);
 
 // LOGIN
 Route::get('/login', function () {
@@ -28,20 +30,51 @@ Route::post('/login', function (Request $request) {
 
     $user = \App\Models\User::where('email', $request->email)->first();
 
-    // DEBUG (optional)
-    // dd($user);
-
     if (!$user || !Hash::check($request->password, $user->password)) {
         return back()->with('error', 'Invalid credentials');
     }
 
-    // ✅ IMPORTANT FIX HERE
+    // Store session
     session()->put('user_id', $user->user_id);
-    session()->put('is_admin', true);
+    session()->put('role', $user->role);
 
-    return redirect('/admin/dashboard');
+    session()->put('user_name', $user->name);
+    session()->put('user_email', $user->email);
+
+    // Redirect based on role
+    if ($user->role === 'admin') {
+        return redirect('/admin/dashboard');
+    }
+
+    return redirect('/client/dashboard');
 
 })->name('login');
+
+// CLIENT
+Route::middleware(['web', 'auth.session'])->prefix('client')->group(function () {
+
+    Route::get('/dashboard', [ClientController::class, 'dashboard'])
+        ->name('client.dashboard');
+
+    Route::get('/create-order', function () {
+        $products = \App\Models\Product::where('status', 'active')->get();
+        return view('client.create-order', compact('products'));
+    })->name('client.create-order');
+
+    Route::post('/store-order', [OrderController::class, 'store'])
+        ->name('client.order.store');
+
+    Route::get('/order-success/{id}', function ($id) {
+
+        $order = \App\Models\Order::findOrFail($id);
+
+        $code = 'ORD-' . str_pad($order->order_id, 4, '0', STR_PAD_LEFT);
+
+        return view('client.order-success', compact('order', 'code'));
+        
+    })->name('client.order.success');
+
+});
 
 // ADMIN
 

@@ -1,10 +1,8 @@
-@extends('layouts.content')
+@extends('client.layouts.app')
 
 @section('content')
 
-<section class="bg-gradient-to-br from-blue-100 to-gray-200 min-h-screen py-16 flex items-center">
-
-<div class="max-w-2xl mx-auto w-full px-6">
+<div class="max-w-3xl mx-auto px-6 py-10">
 
     <!-- SUCCESS ICON -->
     <div class="text-center">
@@ -18,10 +16,10 @@
         </p>
     </div>
 
-    <!-- ORDER ID CARD -->
+    <!-- ORDER ID -->
     <div class="bg-white rounded-2xl shadow-lg mt-8 overflow-hidden">
 
-        <div class="text-center py-3" style="background: #EEF2FF;">
+        <div class="text-center py-3 bg-blue-50">
             <p class="font-medium">Your Order ID</p>
             <p class="text-sm text-gray-500">Save this ID to track your order anytime</p>
         </div>
@@ -31,7 +29,6 @@
             <div class="border-2 border-dashed border-blue-300 rounded-xl py-6 text-pink-500 text-2xl font-bold tracking-widest flex items-center justify-center gap-2">
                 {{ $code }}
 
-                <!-- COPY BUTTON -->
                 <button onclick="copyOrderID()" class="text-sm text-gray-500 hover:text-black">
                     <i class="fa-regular fa-copy"></i>
                 </button>
@@ -39,7 +36,8 @@
 
             <p class="text-sm text-gray-500 mt-4">
                 <i class="fa-regular fa-envelope"></i>
-                An admin will send an order confirmation to: <b>{{ $email ?? 'your@email.com' }}</b>
+                An admin will send an order confirmation to
+                <b>{{ $order->email ?? session('user_email') }}</b>
             </p>
 
         </div>
@@ -88,37 +86,61 @@
     </div>
 
     <!-- BUTTONS -->
-    <div class="flex flex-col md:flex-row gap-3 mt-6 border py-3">
+    <div class="flex flex-col md:flex-row gap-3 mt-6">
 
-        <a href="#" class="flex-1 text-center text-white py-3 rounded-lg" style="background-color: #D47497;">
-            <i class="fa-solid fa-magnifying-glass"></i> Track Order
+        <a href="#"
+            class="flex-1 text-center text-white py-3 rounded-lg"
+            style="background-color: #D47497;">
+            <i class="fa-solid fa-magnifying-glass"></i> View Order
         </a>
 
-        <a href="{{ route('order') }}" class="flex-1 text-center border py-3 bg-white rounded-lg">
-            <i class="fa-solid fa-cart-shopping"></i> Place Another Order
+        <a href="{{ route('client.create-order') }}"
+            class="flex-1 text-center border py-3 bg-white rounded-lg">
+            <i class="fa-solid fa-cart-shopping"></i> Create Another
         </a>
 
-        <a href="/" class="flex-1 text-center border py-3 bg-white rounded-lg">
-            <i class="fa-solid fa-house"></i> Back to Home
+        <a href="{{ route('client.dashboard') }}"
+            class="flex-1 text-center border py-3 bg-white rounded-lg">
+            <i class="fa-solid fa-house"></i> Dashboard
         </a>
 
-    </div>
-
-    <!-- FOOTER NOTE -->
-    <div class="mt-6 text-center text-sm text-gray-500 border rounded-lg py-3" style="--bs-border-opacity: 0.8; background-color: #EFF6FF; border-color: #BEDBFF !important;">
-        Questions? Contact us at 
-        <span class="text-pink-500">sprintphl@gmail.com</span>
     </div>
 
 </div>
 
-</section>
+<div id="copyModal"
+     class="fixed inset-0 flex items-center justify-center bg-black/30 opacity-0 pointer-events-none transition-all duration-300 z-50">
+
+    <div class="bg-white px-6 py-4 rounded-xl shadow-xl flex items-center gap-2 scale-90 transition-all duration-300">
+        <i class="fa-solid fa-check text-pink-500"></i>
+        <span class="font-medium">Copied!</span>
+    </div>
+
+</div>
 
 <!-- COPY SCRIPT -->
 <script>
 function copyOrderID() {
     navigator.clipboard.writeText("{{ $code }}");
-    alert("Order ID copied!");
+
+    const modal = document.getElementById('copyModal');
+    const box = modal.firstElementChild;
+
+    // show
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    modal.classList.add('opacity-100');
+
+    box.classList.remove('scale-90');
+    box.classList.add('scale-100');
+
+    // hide after 1.5s
+    setTimeout(() => {
+        modal.classList.remove('opacity-100');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+
+        box.classList.remove('scale-100');
+        box.classList.add('scale-90');
+    }, 1500);
 }
 </script>
 

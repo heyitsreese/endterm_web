@@ -13,6 +13,7 @@ class Order extends Model
     protected $keyType = 'int';
 
     protected $fillable = [
+        'user_id',
         'customer_name',
         'email',
         'phone_number',

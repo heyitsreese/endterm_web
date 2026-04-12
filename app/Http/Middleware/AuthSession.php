@@ -4,17 +4,14 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 
-class AdminSession
+class AuthSession
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!session('user_id')) {
+        if (!Session::has('user_id')) {
             return redirect('/login');
-        }
-
-        if (session('role') !== 'admin') {
-            return redirect('/client/dashboard');
         }
 
         return $next($request);

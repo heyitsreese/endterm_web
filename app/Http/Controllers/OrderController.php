@@ -110,94 +110,123 @@ class OrderController extends Controller
     }
 
     public function store(Request $request)
-        {
-            $product = Product::find(session('product_id'));
+    {
+        //dd(session()->all());
+        // 🔥 GET DATA (request OR session fallback)
+        $productId = $request->product_id ?? session('product_id');
+        $quantity = $request->quantity ?? session('quantity');
+        $paperSize = $request->paper_size ?? session('paper_size');
+        $color = $request->color ?? session('color');
+        $paperQuality = $request->paper_quality ?? session('paper_quality');
+        $instructions = $request->instructions ?? session('instructions');
+        $userId = session('user_id');
 
-            if (!$product) {
-                return back()->with('error', 'Product not found.');
-            }
+        $name = session('user_id')
+            ? session('user_name')
+            : ($request->customer_name ?? session('name'));
 
-            $quantity = session('quantity');
-            $paperSize = session('paper_size');
-            $color = session('color');
-            $paperQuality = session('paper_quality');
-            $instructions = session('instructions');
+        $email = session('user_id')
+            ? session('user_email')
+            : ($request->email ?? session('email'));
 
-            $name = session('name');
-            $email = session('email');
-            $phone = session('phone');
+        $phone = $request->phone ?? session('phone');
 
-            $deliveryType = $request->delivery_type ?? 'pickup';
+        $deliveryType = $request->delivery_type ?? session('delivery_type') ?? 'pickup';
 
-            // ✅ PRICE
-            $basePrice = $product->base_price;
+        $request->validate([
+            'phone' => ['required', 'regex:/^\+63\s9\d{2}\s\d{3}\s\d{4}$/']
+        ]);
 
-            $discountRate = 0;
-            if ($quantity >= 500) {
-                $discountRate = 0.20;
-            } elseif ($quantity >= 100) {
-                $discountRate = 0.10;
-            }
+        // 🔥 PRODUCT
+        $product = Product::find($productId);
 
-            $discountedPrice = $basePrice - ($basePrice * $discountRate);
-            $colorFee = $color === 'Full Color' ? 10 : 0;
-            $qualityFee = $paperQuality === 'Premium' ? 20 : 0;
+        if (!$product) {
+            return back()->with('error', 'Product not found.');
+        }
 
-            $pricePerUnit = $discountedPrice + $colorFee + $qualityFee;
-            $total = $pricePerUnit * $quantity;
+        // =========================
+        // PRICE CALCULATION
+        // =========================
+        $basePrice = $product->base_price;
 
-            $token = Str::random(40);
+        $discountRate = 0;
+        if ($quantity >= 500) $discountRate = 0.20;
+        elseif ($quantity >= 100) $discountRate = 0.10;
 
-            // ✅ ORDER
-            $order = Order::create([
-                'customer_name' => $name,
-                'email' => $email,
-                'phone_number' => $phone ?? 'N/A',
-                'status' => 'pending',
-                'total_amount' => $total,
-                'order_date' => now(),
-                'order_token' => $token,
-                'delivery_type' => $deliveryType,
-            ]);
+        $discountedPrice = $basePrice - ($basePrice * $discountRate);
+        $colorFee = $color === 'Full Color' ? 10 : 0;
+        $qualityFee = $paperQuality === 'Premium' ? 20 : 0;
 
-            // ✅ ORDER DETAILS
-            foreach (session('files', []) as $file) {
+        $pricePerUnit = $discountedPrice + $colorFee + $qualityFee;
+        $total = $pricePerUnit * $quantity;
 
+        // =========================
+        // CREATE ORDER
+        // =========================
+        $order = Order::create([
+            'user_id' => $userId ? $userId : null,
+            'customer_name' => $name,
+            'email' => $email,
+            'phone_number' => $phone,
+            'status' => 'pending',
+            'order_token' => Str::random(10),
+            'total_amount' => $total,
+            'order_date' => now(),
+        ]);
+
+        // =========================
+        // ORDER DETAILS
+        // =========================
+        $files = $request->file('files') ?? session('files', []);
+
+        foreach ($files as $file) {
+
+            // 🔥 HANDLE FILE (both cases)
+            if (is_object($file)) {
+                $filePath = $file->store('orders', 'public');
+            } else {
                 $filePath = is_array($file) ? ($file['path'] ?? null) : $file;
-
-                if (!$filePath) continue;
-
-                OrderDetail::create([
-                    'order_id' => $order->order_id,
-                    'product_id' => $product->product_id,
-                    'quantity' => $quantity,
-                    'size' => $paperSize,
-                    'color' => $color,
-                    'paper_quality' => $paperQuality,
-                    'special_instruction' => $instructions,
-                    'file_path' => $filePath,
-                ]);
             }
 
-            $code = 'ORD-' . str_pad($order->order_id, 4, '0', STR_PAD_LEFT);
+            if (!$filePath) continue;
 
-            // ✅ CLEAR SESSION
-            session()->forget([
-                'product_id',
-                'quantity',
-                'paper_size',
-                'color',
-                'paper_quality',
-                'instructions',
-                'files',
-                'name',
-                'email',
-                'phone'
-            ]);
-
-            return view('order-success', [
-                'code' => $code,
-                'email' => $email
+            OrderDetail::create([
+                'order_id' => $order->order_id,
+                'product_id' => $product->product_id,
+                'quantity' => $quantity,
+                'size' => $paperSize,
+                'color' => $color,
+                'paper_quality' => $paperQuality,
+                'special_instruction' => $instructions,
+                'file_path' => $filePath,
             ]);
         }
+
+        // =========================
+        // CLEAR SESSION (ONLY IF USED)
+        // =========================
+        session()->forget([
+            'product_id',
+            'quantity',
+            'paper_size',
+            'color',
+            'paper_quality',
+            'instructions',
+            'files',
+            'name',
+            'email',
+            'phone'
+        ]);
+
+        // =========================
+        // SUCCESS
+        // =========================
+        $code = 'ORD-' . str_pad($order->order_id, 4, '0', STR_PAD_LEFT);
+
+        if (session('user_id')) {
+            return redirect()->route('client.order.success', $order->order_id);
+        }
+
+        return redirect()->route('order.success', $order->order_token);
+    }
 }

@@ -562,7 +562,7 @@ class AdminController extends Controller
             'size' => $request->paper_size,
             'color' => $color,
             'paper_quality' => $quality,
-            'file_path' => json_encode($paths),
+            'file_path' => $paths[0]['path'] ?? null,
             'special_instruction' => $request->instructions
         ]);
 
