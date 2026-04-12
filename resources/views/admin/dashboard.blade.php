@@ -38,6 +38,7 @@
                        focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white
                        text-sm text-gray-600 placeholder-gray-400 font-medium">
         </div>
+
         <div class="relative">
             <button onclick="toggleNotif()" class="text-gray-500 hover:text-gray-700 transition">
                 <i data-feather="bell" class="w-5 h-5"></i>
@@ -52,7 +53,7 @@
             <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-xl p-4 z-50">
                 <h3 class="font-semibold mb-2 text-sm">Recent Orders</h3>
 
-                @forelse($recentOrders as $order)
+                @forelse($pendingNotifications as $order)
                     <div data-id="{{ $order->order_id }}"
                         onclick="markAsRead(this.dataset.id)"
                         class="border-b py-2 text-xs text-gray-600 cursor-pointer hover:bg-gray-50 rounded px-2">
@@ -70,7 +71,7 @@
 @endsection
 
 <!-- CARDS -->
-<div class="grid md:grid-cols-4 gap-4 mb-6">
+<div class="grid md:grid-cols-3 gap-4 mb-6">
 
     <!-- Total Orders -->
     <div class="bg-white p-5 rounded-xl shadow flex justify-between items-center">
@@ -102,17 +103,6 @@
         </div>
         <div class="bg-orange-500 text-white p-3 rounded-lg">
             ⏳
-        </div>
-    </div>
-
-    <!-- Clients -->
-    <div class="bg-white p-5 rounded-xl shadow flex justify-between items-center">
-        <div>
-            <p class="text-sm text-gray-500">Active Clients</p>
-            <h2 class="text-2xl font-bold">{{ $activeClients }}</h2>
-        </div>
-        <div class="bg-purple-500 text-white p-3 rounded-lg">
-            👥
         </div>
     </div>
 
@@ -170,6 +160,8 @@
                         <span class="bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-truck"></i> Out for Delivery</span>
                     @elseif($order->status == 'delivered')
                         <span class="bg-green-100 text-green-600 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-house"></i> Delivered</span>
+                    @elseif($order->status == 'picked_up')
+                    <span class="bg-green-100 text-green-600 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-check-circle"></i> Picked Up</span>
                     @else
                         <span class="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-times-circle"></i> Cancelled</span>
                     @endif

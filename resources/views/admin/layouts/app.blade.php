@@ -6,6 +6,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://kit.fontawesome.com/97c3b6d53c.js" crossorigin="anonymous"></script>
+    <link rel="icon" type="image" href="{{ asset('images/logo.png') }}">
 </head>
 
 <body class="bg-white">
@@ -42,7 +43,7 @@
                     </div>
 
                     <span class="bg-pink-400 text-white text-xs px-2 py-0.5 rounded-full">
-                        {{ $totalOrders ?? 0 }}
+                        {{ $pendingOrders ?? 0 }}
                     </span>
                 </a>
 
@@ -227,92 +228,6 @@ function toggleOrderExpand(id) {
 </script>
 
 <script>
-function calculateTotal() {
-    let total = 0;
-
-    document.querySelectorAll('.order-item').forEach(item => {
-        const productName = item.querySelector('.product-name').innerText.trim();
-        const quantity = parseInt(item.querySelector('.quantity-input').value) || 0;
-
-        const price = basePrices[productName] || 0;
-
-        total += price * quantity;
-    });
-
-    document.getElementById('totalAmount').value = total.toFixed(2);
-}
-
-// trigger on change
-document.querySelectorAll('.quantity-input').forEach(input => {
-    input.addEventListener('input', calculateTotal);
-});
-
-// initial compute
-calculateTotal();
-</script>
-
-<script>
-const basePrices = {
-    "Business Cards": 30,
-    "Flyers": 50,
-    "Posters": 20,
-    "Brochures": 70,
-    "Banners": 150,
-    "Booklets": 130
-};
-
-function calculateTotal() {
-    let total = 0;
-
-    document.querySelectorAll('.order-item').forEach(item => {
-
-        const productName = item.querySelector('.product-name').innerText.trim();
-        const quantity = parseInt(item.querySelector('.quantity-input').value) || 0;
-        const color = item.querySelector('.color-input').value;
-        const quality = item.querySelector('.quality-input').value;
-
-        let basePrice = basePrices[productName] || 0;
-
-        // discount
-        let discountRate = 0;
-        if (quantity >= 500) {
-            discountRate = 0.20;
-        } else if (quantity >= 100) {
-            discountRate = 0.10;
-        }
-
-        let discountedPrice = basePrice - (basePrice * discountRate);
-
-        // add-ons
-        let colorFee = (color === 'Full Color') ? 10 : 0;
-
-        const qualityFees = {
-            "Matte": 0,
-            "Glossy": -5,
-            "Premium": 20
-        };
-
-        let qualityFee = qualityFees[quality] || 0;
-
-        let finalPricePerUnit = discountedPrice + colorFee + qualityFee;
-
-        let subtotal = finalPricePerUnit * quantity;
-
-        total += subtotal;
-    });
-
-    document.getElementById('totalAmount').value = total.toFixed(2);
-}
-
-// listeners
-document.querySelectorAll('.quantity-input, .color-input, .quality-input')
-    .forEach(input => input.addEventListener('input', calculateTotal));
-
-// initial
-calculateTotal();
-</script>
-
-<script>
 function openAddModal() {
     document.getElementById('addProductModal').classList.remove('hidden');
     document.getElementById('addProductModal').classList.add('flex');
@@ -349,7 +264,7 @@ function closeEditModal() {
 </script>
 
 <script>
-function openDeleteModal(button) {
+function openProductDeleteModal(button) {
 
     const productId = button.dataset.id;
 
@@ -361,7 +276,7 @@ function openDeleteModal(button) {
     document.getElementById('deleteModal').classList.add('flex');
 }
 
-function closeDeleteModal() {
+function closeProductDeleteModal() {
     document.getElementById('deleteModal').classList.add('hidden');
     document.getElementById('deleteModal').classList.remove('flex');
 }
@@ -399,39 +314,36 @@ function closeViewModal() {
 </script>
 
 <script>
-document.getElementById('add_image').addEventListener('change', function(e) {
+const addImage = document.getElementById('add_image');
+if (addImage) addImage.addEventListener('change', function(e) {
     const file = e.target.files[0];
-
     if (file) {
         const reader = new FileReader();
-
         reader.onload = function(e) {
             const preview = document.getElementById('add_preview');
             preview.src = e.target.result;
             preview.classList.remove('hidden');
         };
-
         reader.readAsDataURL(file);
     }
 });
 </script>
 
 <script>
-document.getElementById('edit_image').addEventListener('change', function(e) {
+const editImage = document.getElementById('edit_image');
+if (editImage) editImage.addEventListener('change', function(e) {
     const file = e.target.files[0];
-
     if (file) {
         const reader = new FileReader();
-
         reader.onload = function(e) {
             const preview = document.getElementById('edit_preview');
             preview.src = e.target.result;
             preview.classList.remove('hidden');
         };
-
         reader.readAsDataURL(file);
     }
 });
+
 </script>
 
 <script>

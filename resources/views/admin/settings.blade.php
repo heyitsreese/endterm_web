@@ -51,7 +51,7 @@
             <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-xl p-4 z-50">
                 <h3 class="font-semibold mb-2 text-sm">Recent Orders</h3>
 
-                @forelse($recentOrders as $order)
+                @forelse($pendingNotifications as $order)
                     <div data-id="{{ $order->order_id }}"
                         onclick="markAsRead(this.dataset.id)"
                         class="border-b py-2 text-xs text-gray-600 cursor-pointer hover:bg-gray-50 rounded px-2">

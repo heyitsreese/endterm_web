@@ -113,10 +113,11 @@
         </ul>
 
         <!-- BUTTON -->
-        <button class="mt-5 w-full text-white py-2 rounded-lg hover:bg-pink-600 transition"
-            style="background-color: #D47497;">
+       <a href="{{ url('/order?product_id='.$product->product_id) }}"
+        class="mt-5 block text-center w-full text-white py-2 rounded-lg hover:bg-pink-600 transition"
+        style="background-color: #D47497;">
             Order Now
-        </button>
+        </a>
 
     </div>
 

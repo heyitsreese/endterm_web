@@ -58,7 +58,7 @@
     </p>
 
     <!-- ✅ FORM START -->
-    <form method="POST" action="{{ route('order.step3') }}">
+    <form method="POST" action="{{ route('order.step2.store') }}">
         @csrf
 
         <!-- CARD -->
@@ -71,35 +71,49 @@
             </div>
 
             <!-- SERVICE SELECT -->
-            <h3 class="font-medium mb-4">Select Printing Service</h3>
+            <h3 class="font-medium mb-4">Select Printing Service<span class="text-red-600">*</span></h3>
 
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                <div class="service-card active" data-value="Business Cards">Business Cards</div>
-                <div class="service-card" data-value="Flyers">Flyers</div>
-                <div class="service-card" data-value="Posters">Posters</div>
-                <div class="service-card" data-value="Brochures">Brochures</div>
-                <div class="service-card" data-value="Banners">Banners</div>
-                <div class="service-card" data-value="Booklets">Booklets</div>
-            </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                    @foreach($products as $product)
+                        <div class="service-card"
+                            data-value="{{ $product->product_id }}">
+
+                            <p class="font-medium leading-tight">
+                                {{ $product->product_name }}
+                            </p>
+
+                            <p class="text-xs text-gray-400 mt-1">
+                                ₱{{ number_format($product->base_price, 2) }}
+                            </p>
+
+                        </div>
+                    @endforeach
+                </div>
 
             <!-- ✅ hidden input (unchanged but now inside form) -->
-            <input type="hidden" name="service" id="service" value="Business Cards">
+            <input type="hidden" name="product_id" id="product_id" value="{{ session('product_id') }}">
 
             <!-- QUANTITY -->
             <div class="mb-6">
                 <label class="font-medium flex items-center gap-2">
                     <i class="fa-solid fa-layer-group text-gray-400"></i>
-                    How Many Do You Need?
+                    How Many Do You Need?<span class="text-red-600">*</span>
                 </label>
                 <input type="number" name="quantity"
-                       placeholder="e.g., 100"
-                       class="w-full mt-2 px-4 py-3 rounded-lg bg-gray-100 focus:ring-2 focus:ring-pink-400">
+                required
+                value="{{ session('quantity') }}"
+                placeholder="e.g., 100"
+                class="w-full mt-2 px-4 py-3 rounded-lg bg-gray-100 focus:ring-2 focus:ring-pink-400">
                 <p class="text-xs text-gray-400 mt-1">
                     💡 Larger quantities often get better prices!
                 </p>
             </div>
 
             <!-- PAPER SIZE -->
+            <label class="font-medium flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-gray-400"></i>
+                    Paper Size<span class="text-red-600">*</span>
+            </label>
             <div class="grid grid-cols-2 gap-4 mb-4">
 
                 <div class="option-card paper-size active" data-value="A4">
@@ -132,13 +146,13 @@
                     class="w-full mt-2 px-4 py-3 rounded-lg bg-gray-100 focus:ring-2 focus:ring-pink-400">
             </div>
 
-            <input type="hidden" name="paper_size" id="paper_size" value="A4">
+            <input type="hidden" name="paper_size" id="paper_size" required value="{{ session('paper_size') ?? 'A4' }}">
 
             <!-- COLOR -->
             <div class="mb-6">
                 <label class="font-medium flex items-center gap-2 mb-3">
                     <i class="fa-solid fa-palette text-gray-400"></i>
-                    Color Options
+                    Color Options<span class="text-red-600">*</span>
                 </label>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -146,18 +160,18 @@
                     <div class="option-card color-option" data-value="Black & White">⚫ Black & White</div>
                 </div>
 
-                <input type="hidden" name="color" id="color" value="Full Color">
+                <input type="hidden" name="color" id="color" required value="{{ session('color') ?? 'Full Color' }}">
             </div>
 
             <!-- PAPER QUALITY -->
             <div class="mb-6">
-                <label class="font-medium">Paper Quality</label>
+                <label class="font-medium">Paper Quality<span class="text-red-600">*</span></label>
                 <select name="paper_quality"
                         class="w-full mt-2 px-4 py-3 rounded-lg bg-gray-100">
                     <option value="">Choose paper quality</option>
-                    <option>Glossy</option>
-                    <option>Matte</option>
-                    <option>Premium</option>
+                    <option value="Glossy" {{ session('paper_quality') === 'Glossy' ? 'selected' : '' }}>Glossy</option>
+                    <option value="Matte" {{ session('paper_quality') === 'Matte' ? 'selected' : '' }}>Matte</option>
+                    <option value="Premium" {{ session('paper_quality') === 'Premium' ? 'selected' : '' }}>Premium</option>
                 </select>
             </div>
 
@@ -168,7 +182,7 @@
                 </label>
                 <textarea name="instructions" rows="3"
                           class="w-full mt-2 px-4 py-3 rounded-lg bg-gray-100"
-                          placeholder="Tell us anything special about your order..."></textarea>
+                          placeholder="Tell us anything special about your order...">{{ session('instructions') }}</textarea>
             </div>
 
         </div>
@@ -194,5 +208,33 @@
 </div>
 
 </section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const cards = document.querySelectorAll('.service-card');
+    const input = document.getElementById('product_id');
+
+    const selected = "{{ session('product_id') ?? '' }}";
+
+    cards.forEach(card => {
+
+        // ✅ restore selected state
+        if (card.dataset.value === selected) {
+            card.classList.add('active');
+            input.value = selected;
+        }
+
+        // ✅ click handler
+        card.addEventListener('click', () => {
+            cards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+
+            input.value = card.dataset.value;
+        });
+    });
+
+});
+</script>
 
 @endsection

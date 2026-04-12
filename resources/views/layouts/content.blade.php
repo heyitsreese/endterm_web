@@ -111,4 +111,22 @@
             });
         }
     </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const productId = "{{ $productId ?? '' }}";
+
+            if (!productId) return;
+
+            document.querySelectorAll('.service-card').forEach(card => {
+                card.classList.remove('active');
+
+                if (card.dataset.value === productId) {
+                    card.classList.add('active');
+                }
+            });
+
+            document.getElementById('service').value = productId;
+        });
+    </script>
 </body>

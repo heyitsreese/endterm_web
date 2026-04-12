@@ -1,4 +1,4 @@
-<!-- order-step4.blade.php -->
+<!-- order-step3.blade.php -->
 @extends('layouts.content')
 
 @section('content')
@@ -105,7 +105,16 @@
             <!-- FILE LIST -->
             <div class="mt-6">
                 <h3 class="font-medium mb-3">Uploaded Files</h3>
-                <div id="file-list" class="space-y-3"></div>
+                <div id="file-list" class="space-y-3">
+                    @if(session('files'))
+                        @foreach(session('files') as $file)
+                            <div class="flex justify-between items-center bg-gray-100 px-4 py-2 rounded-lg">
+                                <span class="text-sm">{{ is_array($file) ? $file['name'] : basename($file) }}</span>
+                                <span class="text-xs text-gray-500">Uploaded</span>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
             </div>
 
             <!-- TIPS -->
@@ -141,4 +150,42 @@
 </div>
 
 </section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const fileInput = document.getElementById("fileElem");
+    const fileList = document.getElementById("file-list");
+    const dropArea = document.getElementById("drop-area");
+    const button = dropArea.querySelector("button");
+
+    // ✅ FIX: prevent double trigger
+    dropArea.addEventListener("click", function (e) {
+        // only trigger if NOT clicking button
+        if (e.target.tagName !== "BUTTON") {
+            fileInput.click();
+        }
+    });
+
+    fileInput.addEventListener("change", function () {
+        displayFiles(this.files);
+    });
+
+    function displayFiles(files) {
+
+        Array.from(files).forEach(file => {
+            const div = document.createElement("div");
+            div.className = "flex justify-between items-center bg-gray-100 px-4 py-2 rounded-lg";
+
+            div.innerHTML = `
+                <span class="text-sm">${file.name}</span>
+                <span class="text-xs text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+            `;
+
+            fileList.appendChild(div); // ✅ append, NOT replace
+        });
+    }
+
+});
+</script>
 @endsection

@@ -45,7 +45,7 @@ Route::post('/login', function (Request $request) {
 
 // ADMIN
 
-Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+Route::middleware('admin.session')->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/dashboard', [AdminController::class, 'dashboard'])
         ->name('dashboard');
@@ -64,6 +64,12 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/orders', [AdminController::class, 'index'])
         ->name('orders.index');
+
+    Route::get('/orders/create', [AdminController::class, 'create'])
+        ->name('orders.create');
+
+    Route::post('/orders', [AdminController::class, 'store'])
+        ->name('orders.store');
 
     Route::get('/orders/{id}', [AdminController::class, 'show'])
         ->name('orders.show');
@@ -97,24 +103,33 @@ Route::post('/logout', function () {
 })->name('logout');
 
 // ORDERS
-Route::get('/order', function () {
-    return view('order-page');
-})->name('order');
+Route::get('/order', function (Request $request) {
 
-Route::get('/order/step-2', function () {
-    return view('order-step2');
-})->name('order.step2');
+    session()->forget('files');
 
-Route::post('/order/step-2', function (Request $request) {
-
-    session([
-        'name' => $request->name,
-        'email' => $request->email,
-        'phone' => $request->phone,
+    session()->forget([
+        'files',
+        'service',
+        'quantity',
+        'paper_size',
+        'color',
+        'paper_quality',
+        'instructions',
     ]);
 
-    return redirect()->route('order.step2');
-});
+    $productId = $request->product_id;
+
+    return view('order-page', compact('productId'));
+})->name('order');
+
+Route::post('/order/step-1', [OrderController::class, 'step1Store'])
+    ->name('order.step1.store');
+
+Route::get('/order/step-2', [OrderController::class, 'step2'])
+    ->name('order.step2');
+
+Route::post('/order/step-2', [OrderController::class, 'step2Store'])
+    ->name('order.step2.store');
 
 Route::get('/order/step-3', function () {
     return view('order-step3');
@@ -128,7 +143,7 @@ Route::post('/order/step-3', function (Request $request) {
         : $request->paper_size;
 
     session([
-        'service' => $request->service,
+        'product_id' => $request->product_id,
         'quantity' => $request->quantity,
         'paper_size' => $paperSize,
         'color' => $request->color,
@@ -145,11 +160,17 @@ Route::get('/order/step-4', function () {
 
 Route::post('/order/step-4', function (Request $request) {
 
-    $paths = [];
+    $paths = session('files', []);
 
     if ($request->hasFile('files')) {
         foreach ($request->file('files') as $file) {
-            $paths[] = $file->store('uploads', 'public');
+
+            $storedPath = $file->store('uploads', 'public');
+
+            $paths[] = [
+                'path' => $storedPath,
+                'name' => $file->getClientOriginalName()
+            ];
         }
     }
 
@@ -160,99 +181,7 @@ Route::post('/order/step-4', function (Request $request) {
     return redirect()->route('order.step4');
 });
 
-Route::post('/order/store', function () {
-
-    $service = session('service');
-    $quantity = session('quantity');
-    $paperSize = session('paper_size');
-    $color = session('color');
-    $paperQuality = session('paper_quality');
-    $instructions = session('instructions');
-
-    $name = session('name');
-    $email = session('email');
-    $phone = session('phone');
-
-    // ✅ PRICE CALCULATION
-    $basePrices = [
-        'Business Cards' => 30,
-        'Flyers' => 50,
-        'Posters' => 20,
-        'Brochures' => 70,
-        'Banners' => 150,
-        'Booklets' => 130,
-    ];
-
-    $basePrice = $basePrices[$service] ?? 0;
-
-    $discountRate = 0;
-    if ($quantity >= 500) {
-        $discountRate = 0.20;
-    } elseif ($quantity >= 100) {
-        $discountRate = 0.10;
-    }
-
-    $discountedPrice = $basePrice - ($basePrice * $discountRate);
-
-    $colorFee = $color === 'Full Color' ? 10 : 0;
-    $qualityFee = $paperQuality === 'Premium' ? 20 : 0;
-
-    $pricePerUnit = $discountedPrice + $colorFee + $qualityFee;
-    $total = $pricePerUnit * $quantity;
-
-    // ✅ PRODUCT
-    $product = Product::whereRaw('LOWER(product_name) = ?', [strtolower($service)])->first();
-
-    if (!$product) {
-        return back()->with('error', 'Product not found.');
-    }
-
-    $token = Str::random(40);
-
-    // ✅ ORDER
-    $order = Order::create([
-        'customer_name' => $name,
-        'email' => $email,
-        'phone_number' => $phone ?? 'N/A',
-        'status' => 'pending',
-        'total_amount' => $total,
-        'order_date' => now(),
-        'order_token' => $token,
-    ]);
-
-    // ✅ ORDER DETAILS
-    $files = session('files', []);
-
-    foreach ($files as $filePath) {
-
-        OrderDetail::create([
-            'order_id' => $order->order_id, // ✅ NOW VALID
-            'product_id' => $product->product_id,
-            'quantity' => $quantity,
-            'size' => $paperSize,
-            'color' => $color,
-            'paper_quality' => $paperQuality,
-            'special_instruction' => $instructions,
-            'file_path' => $filePath,
-        ]);
-    }
-
-    $orderCode = 'ORD-' . str_pad($order->order_id, 4, '0', STR_PAD_LEFT);
-
-    session()->forget([
-        'service',
-        'quantity',
-        'paper_size',
-        'color',
-        'paper_quality',
-        'instructions',
-        'files',
-        'name',
-        'email',
-        'phone'
-    ]);
-    return redirect()->route('order.success', ['token' => $token]);
-})->name('order.store');
+Route::post('/order/store', [OrderController::class, 'store'])->name('order.store');
 
 Route::get('/order/success/{token}', function ($token) {
 
@@ -270,4 +199,3 @@ Route::get('/order/success/{token}', function ($token) {
     ]);
 
 })->name('order.success');
-

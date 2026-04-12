@@ -2,34 +2,55 @@
 
 namespace App\Http\Controllers;
 use App\Models\Order;
+use App\Models\OrderDetail;
 use App\Models\User;
 use App\Models\Product;
+use App\Services\PriceService;
+use Carbon\Carbon;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
     public function dashboard()
     {
         $admin = User::where('user_id', session('user_id'))->first();
-        $totalOrders = Order::count();
-        $revenue = Order::sum('total_amount');
+        $startOfMonth = Carbon::now()->startOfMonth();
+        $endOfMonth = Carbon::now()->endOfMonth();
+
+        $totalOrders = Order::whereBetween('created_at', [$startOfMonth, $endOfMonth])->count();
+
+        $revenue = Order::whereIn('status', ['delivered', 'picked_up'])
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->sum('total_amount');
+            
         $pendingOrders = Order::where('status', 'pending')->count();
 
-        $unreadOrdersCount = Order::where('is_read', false)->count();
+        $unreadOrdersCount = Order::where('status', 'pending')
+            ->where('is_read', false)
+            ->count();
         $activeClients = Order::distinct('email')->count('email');
 
         $recentOrders = Order::with(['orderDetails.product'])
-            ->latest()
-            ->take(5)
-            ->get();
+        ->latest()
+        ->take(5)
+        ->get();
+
+        $pendingNotifications = Order::with(['orderDetails.product'])
+        ->where('status', 'pending')
+        ->where('is_read', false)
+        ->latest()
+        ->take(5)
+        ->get();
 
         return view('admin.dashboard', compact(
             'totalOrders',
             'revenue',
             'pendingOrders',
             'activeClients',
+            'pendingNotifications',
             'recentOrders',
             'admin',
             'unreadOrdersCount'
@@ -40,15 +61,50 @@ class AdminController extends Controller
     {
         $admin = User::where('user_id', session('user_id'))->first();
 
-        $orders = Order::with(['orderDetails.product'])->latest()->get();
+        $orders = Order::with(['orderDetails.product'])
+            ->whereNotIn('status', ['declined', 'delivered', 'picked_up'])
+            ->latest()
+            ->get();
+
+        $declinedOrders = Order::with(['orderDetails.product'])
+            ->where('status', 'declined')
+            ->latest()
+            ->get();
+
+        $pickupStatuses = [
+            'pending',
+            'in_progress',
+            'ready_for_pickup',
+            'picked_up',
+            'declined'
+        ];
+
+        $deliveryStatuses = [
+            'pending',
+            'in_progress',
+            'out_for_delivery',
+            'delivered',
+            'declined'
+        ];
 
         $totalOrders = Order::count();
         $pendingOrders = Order::where('status', 'pending')->count();
         $inProgressOrders = Order::where('status', 'in_progress')->count();
-        $deliveredOrders = Order::where('status', 'delivered')->count();
-        $cancelledOrders = Order::where('status', 'cancelled')->count();
-        $unreadOrdersCount = Order::where('is_read', false)->count();
+        $completedOrders = Order::with(['orderDetails.product'])
+            ->whereIn('status', ['delivered', 'picked_up'])
+            ->latest()
+            ->get();
+        $declinedOrdersCount = Order::where('status', 'declined')->count();
+        $unreadOrdersCount = Order::where('status', 'pending')
+            ->where('is_read', false)
+            ->count();
         $recentOrders = Order::with(['orderDetails.product'])
+            ->latest()
+            ->take(5)
+            ->get();
+        $pendingNotifications = Order::with(['orderDetails.product'])
+            ->where('status', 'pending')
+            ->where('is_read', false)
             ->latest()
             ->take(5)
             ->get();
@@ -56,28 +112,38 @@ class AdminController extends Controller
         return view('admin.orders', compact(
             'orders',
             'totalOrders',
+            'pendingNotifications',
             'pendingOrders',
             'inProgressOrders',
-            'deliveredOrders',
-            'cancelledOrders',
+            'completedOrders',
+            'declinedOrdersCount',
+            'declinedOrders',
             'admin',
             'unreadOrdersCount',
-            'recentOrders'
+            'recentOrders',
+            'pickupStatuses',
+            'deliveryStatuses',
         ));
     }
 
     public function updateStatus(Request $request, $id)
     {
-        $order = Order::findOrFail($id);
+        $order = Order::where('order_id', $id)->firstOrFail();
 
         $request->validate([
             'status' => 'required|string'
         ]);
 
         $order->status = $request->status;
+
+        if ($request->status === 'declined') {
+            $order->decline_reason = $request->decline_reason;
+        }
+
         $order->save();
 
-        return back()->with('success', 'Order status updated!');
+        return response()->json(['success' => true]);
+        dd($request->all());
     }
 
     public function show($id)
@@ -106,67 +172,44 @@ class AdminController extends Controller
 
     public function update(Request $request, $id)
     {
-        $order = \App\Models\Order::findOrFail($id);
-
-        $basePrices = [
-            'Business Cards' => 30,
-            'Flyers' => 50,
-            'Posters' => 20,
-            'Brochures' => 70,
-            'Banners' => 150,
-            'Booklets' => 130,
-        ];
+        $order = Order::findOrFail($id);
 
         $total = 0;
 
         foreach ($request->details as $detailData) {
 
-            $detail = \App\Models\OrderDetail::where('order_details_id', $detailData['id'])->first();
+            $detail = OrderDetail::where('order_details_id', $detailData['id'])->first();
 
             if ($detail) {
 
-                $productName = $detail->product->product_name;
                 $quantity = $detailData['quantity'];
                 $color = $detailData['color'] ?? 'Black & White';
-                $quality = $detailData['paper_quality'] ?? 'Standard';
+                $quality = $detailData['paper_quality'] ?? 'Matte';
 
-                $basePrice = $basePrices[$productName] ?? 0;
+                // 💰 PRICE CALCULATION (🔥 USING SERVICE)
+                $result = PriceService::calculate(
+                    $detail->product->base_price,
+                    $quantity,
+                    $color,
+                    $quality
+                );
 
-                $discountRate = 0;
-                if ($quantity >= 500) {
-                    $discountRate = 0.20;
-                } elseif ($quantity >= 100) {
-                    $discountRate = 0.10;
-                }
-
-                $discountedPrice = $basePrice - ($basePrice * $discountRate);
-
-                $colorFee = $color === 'Full Color' ? 10 : 0;
-                $qualityFees = [
-                    'Matte' => 0,
-                    'Glossy' => -5,
-                    'Premium' => 20,
-                ];
-
-                $qualityFee = $qualityFees[$quality] ?? 0;
-
-                $finalPricePerUnit = $discountedPrice + $colorFee + $qualityFee;
-
-                $subtotal = $finalPricePerUnit * $quantity;
-
+                $subtotal = $result['subtotal'];
                 $total += $subtotal;
 
+                // 🧾 UPDATE DETAIL
                 $detail->update([
                     'quantity' => $quantity,
                     'color' => $color,
                     'paper_quality' => $quality,
                     'size' => $detailData['size'],
                     'special_instruction' => $detailData['instructions'],
+                    'subtotal' => $subtotal
                 ]);
             }
         }
 
-        // ✅ ONLY THIS UPDATE
+        // 🧾 UPDATE ORDER
         $order->update([
             'customer_name' => $request->customer_name,
             'status' => $request->status,
@@ -190,14 +233,22 @@ class AdminController extends Controller
         }
 
         $products = $query->get();
-
+        $pendingOrders = Order::where('status', 'pending')->count();
         $activeProducts = Product::where('status', 'active')->count();
         $categoryList = Product::select('category')->distinct()->pluck('category');
         $categoryCount = $categoryList->count();
 
-        $unreadOrdersCount = Order::where('is_read', false)->count();
+        $unreadOrdersCount = Order::where('status', 'pending')
+            ->where('is_read', false)
+            ->count();
         $totalOrders = Order::count();
         $recentOrders = Order::with(['orderDetails.product'])
+            ->latest()
+            ->take(5)
+            ->get();
+        $pendingNotifications = Order::with(['orderDetails.product'])
+            ->where('status', 'pending')
+            ->where('is_read', false)
             ->latest()
             ->take(5)
             ->get();
@@ -205,11 +256,13 @@ class AdminController extends Controller
 
         return view('admin.products', compact(
             'products',
+            'pendingNotifications',
             'activeProducts',
             'categoryList',
             'categoryCount',
             'recentOrders',
             'totalOrders',
+            'pendingOrders',
             'unreadOrdersCount',
         ));
     }
@@ -294,19 +347,32 @@ class AdminController extends Controller
     {
         $admin = User::where('user_id', session('user_id'))->first();
 
-        $totalOrders = Order::count(); // ✅ ADD THIS
+        $totalOrders = Order::count();
+        $pendingOrders = Order::where('status', 'pending')->count();
 
         $recentOrders = Order::with(['orderDetails.product'])
             ->latest()
             ->take(5)
             ->get();
-        $unreadOrdersCount = Order::where('is_read', false)->count();
+
+        $pendingNotifications = Order::with(['orderDetails.product'])
+            ->where('status', 'pending')
+            ->where('is_read', false)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $unreadOrdersCount = Order::where('status', 'pending')
+            ->where('is_read', false)
+            ->count();
 
         return view('admin.settings', compact(
             'admin',
             'totalOrders',
             'recentOrders',
-            'unreadOrdersCount'
+            'pendingOrders',
+            'unreadOrdersCount',
+            'pendingNotifications'
         ));
     }
 
@@ -337,5 +403,111 @@ class AdminController extends Controller
         $order->save();
 
         return response()->json(['success' => true]);
+    }
+
+    public function create()
+    {
+        $products = \App\Models\Product::where('status', 'active')->get();
+
+        $recentOrders = Order::with(['orderDetails.product'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $pendingNotifications = Order::with(['orderDetails.product'])
+            ->where('status', 'pending')
+            ->where('is_read', false)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $unreadOrdersCount = Order::where('status', 'pending')
+            ->where('is_read', false)
+            ->count();
+
+        return view('admin.orders.create', compact(
+            'products',
+            'recentOrders',
+            'pendingNotifications',
+            'unreadOrdersCount',
+            ));
+    }
+
+    public function store(Request $request)
+    {
+
+        $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'phone' => ['required', 'regex:/^\+63[\s]?\d{3}[\s]?\d{3}[\s]?\d{4}$/'],
+            'product_id' => 'required|exists:products,product_id',
+            'quantity' => 'required|integer|min:1',
+            'paper_size' => 'required',
+            'color' => 'required',
+            'paper_quality' => 'required',
+            'files.*' => 'nullable|file|max:51200' 
+        ]);
+
+        // 📂 HANDLE FILES
+        $paths = [];
+
+        //dd($request->hasFile('files'), $request->allFiles(), $paths);
+
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $stored = $file->store('uploads', 'public');
+
+                $paths[] = [
+                    'path' => $stored,
+                    'name' => $file->getClientOriginalName()
+                ];
+            }
+        }
+
+        // 📦 PRODUCT
+        $product = Product::findOrFail($request->product_id);
+
+        $qty = $request->quantity;
+        $color = $request->color;
+        $quality = $request->paper_quality;
+
+        // 💰 PRICE CALCULATION (🔥 USING SERVICE)
+        $result = PriceService::calculate(
+            $product->base_price,
+            $qty,
+            $color,
+            $quality
+        );
+
+        $total = $result['subtotal'];
+
+        // 🧾 CREATE ORDER
+        $order = Order::create([
+            'customer_name' => $request->customer_name,
+            'email' => $request->email,
+            'phone_number' => $request->phone,
+            'delivery_type' => $request->delivery_type ?? 'pickup',
+            'status' => 'pending',
+            'order_token' => Str::random(10),
+            'total_amount' => $total,
+            'order_date' => now(),
+        ]);
+
+        $orderCode = 'ORD-' . str_pad($order->order_id, 4, '0', STR_PAD_LEFT);
+
+        // 📄 CREATE ORDER DETAIL
+        OrderDetail::create([
+            'order_id' => $order->order_id,
+            'product_id' => $product->product_id,
+            'quantity' => $qty,
+            'size' => $request->paper_size,
+            'color' => $color,
+            'paper_quality' => $quality,
+            'file_path' => json_encode($paths),
+            'special_instruction' => $request->instructions
+        ]);
+
+        return redirect()->route('admin.orders.index')
+            ->with('success', 'Order created successfully!');
     }
 }

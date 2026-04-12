@@ -17,11 +17,13 @@ class OrderDetail extends Model
         'order_id',
         'product_id',
         'quantity',
-        'size',
+        'size',          
         'color',
         'paper_quality',
         'special_instruction',
         'file_path',
+        'price',         // ← add
+        'subtotal',      // ← add
     ];
 
     public function order()

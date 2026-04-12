@@ -27,11 +27,52 @@
     <div class="bg-white rounded-2xl shadow p-6 space-y-6">
 
         <!-- CUSTOMER INFO -->
-        <div>
-            <h2 class="font-semibold text-lg mb-2">Customer Information</h2>
-            <p><strong>Name:</strong> {{ $order->customer_name }}</p>
-            <p><strong>Date:</strong> {{ $order->created_at->format('Y-m-d') }}</p>
-            <p><strong>Status:</strong> {{ ucfirst(str_replace('_', ' ', $order->status)) }}</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- LEFT -->
+            <div>
+                <h2 class="font-semibold text-lg mb-3">Customer Information</h2>
+
+                <div class="space-y-2 text-sm">
+                    <p><strong>Name:</strong> {{ $order->customer_name }}</p>
+                    <p><strong>Email:</strong> {{ $order->email }}</p>
+                    <p><strong>Phone:</strong> {{ $order->phone_number ?? 'N/A' }}</p>
+                </div>
+            </div>
+
+            <!-- RIGHT -->
+            <div>
+                <h2 class="font-semibold text-lg mb-3">Order Information</h2>
+
+                <div class="space-y-2 text-sm">
+
+                    <p>
+                        <strong>Status:</strong>
+                        <span class="px-2 py-1 rounded-full text-xs
+                            @if($order->status == 'pending') bg-orange-100 text-orange-600
+                            @elseif($order->status == 'in_progress') bg-blue-100 text-blue-600
+                            @elseif($order->status == 'ready_for_pickup') bg-purple-100 text-purple-600
+                            @elseif($order->status == 'picked_up') bg-green-100 text-green-600
+                            @elseif($order->status == 'out_for_delivery') bg-indigo-100 text-indigo-600
+                            @elseif($order->status == 'delivered') bg-green-100 text-green-600
+                            @elseif($order->status == 'declined') bg-red-100 text-red-600
+                            @endif
+                        ">
+                            {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                        </span>
+                    </p>
+
+                    <p><strong>Delivery:</strong> {{ ucfirst($order->delivery_type) }}</p>
+
+                    <p><strong>Date:</strong> {{ $order->created_at->format('F d, Y') }}</p>
+
+                    <p><strong>Order Code:</strong>
+                        #ORD-{{ str_pad($order->order_id, 4, '0', STR_PAD_LEFT) }}
+                    </p>
+
+                </div>
+            </div>
+
         </div>
 
         <!-- ORDER ITEMS -->
@@ -76,25 +117,43 @@
 
                             <!-- FILE -->
                             <td class="p-3 text-center align-middle">
-                                @if($detail->file_path)
+                                @php
+                                    $files = is_string($detail->file_path) 
+                                        ? json_decode($detail->file_path, true) 
+                                        : ($detail->file_path ?? []);
+                                    $files = $files ?? [];
+                                @endphp
 
-                                    <div class="flex flex-col items-center gap-2">
+                                @if(count($files) > 0)
+                                    <div class="flex flex-col items-center gap-3">
+                                        @foreach($files as $file)
+                                            <div class="text-xs text-gray-600 font-medium truncate max-w-[120px]">
+                                                {{ $file['name'] }}
+                                            </div>
 
-                                        <!-- VIEW -->
-                                        <a href="{{ asset('storage/' . $detail->file_path) }}"
-                                        target="_blank"
-                                        class="text-blue-500 underline text-xs">
-                                            View
-                                        </a>
+                                            <div class="flex gap-2">
+                                                {{-- VIEW --}}
+                                                <a href="{{ asset('storage/' . $file['path']) }}"
+                                                    target="_blank"
+                                                    class="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg text-xs hover:bg-blue-200">
+                                                    👁 View
+                                                </a>
 
-                                        <!-- PREVIEW -->
-                                        @if(Str::endsWith($detail->file_path, ['jpg','jpeg','png']))
-                                            <img src="{{ asset('storage/' . $detail->file_path) }}"
-                                                class="w-16 h-16 object-cover rounded border">
-                                        @endif
+                                                {{-- DOWNLOAD --}}
+                                                <a href="{{ asset('storage/' . $file['path']) }}"
+                                                    download="{{ $file['name'] }}"
+                                                    class="px-3 py-1 bg-green-100 text-green-600 rounded-lg text-xs hover:bg-green-200">
+                                                    ⬇ Download
+                                                </a>
+                                            </div>
 
+                                            {{-- THUMBNAIL PREVIEW FOR IMAGES --}}
+                                            @if(Str::endsWith($file['path'], ['jpg','jpeg','png']))
+                                                <img src="{{ asset('storage/' . $file['path']) }}"
+                                                    class="w-20 h-20 object-cover rounded-lg border shadow-sm">
+                                            @endif
+                                        @endforeach
                                     </div>
-
                                 @else
                                     <span class="text-gray-400 text-sm">No file</span>
                                 @endif

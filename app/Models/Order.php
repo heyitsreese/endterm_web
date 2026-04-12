@@ -20,6 +20,7 @@ class Order extends Model
         'total_amount',
         'order_date',
         'order_token',
+        'delivery_type',
     ];
 
     public function orderDetails()

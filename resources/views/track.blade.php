@@ -1,3 +1,4 @@
+<!-- track.blade.php -->
 @extends('layouts.content')
 
 @section('content')
@@ -71,18 +72,28 @@
 
             <!-- RESULT -->
             @if($order)
+                @php
+                    $isPickup = $order->delivery_type === 'pickup'; // 👈 MUST be here
 
-            @php
-                $statusSteps = [
-                    'pending' => 1,
-                    'in_progress' => 2,
-                    'ready_for_pickup' => 3,
-                    'out_for_delivery' => 4,
-                    'delivered' => 5,
-                ];
+                    if ($isPickup) {
+                        $statusSteps = [
+                            'pending' => 1,
+                            'in_progress' => 2,
+                            'ready_for_pickup' => 3,
+                            'picked_up' => 4,
+                        ];
+                    } else {
+                        $statusSteps = [
+                            'pending' => 1,
+                            'in_progress' => 2,
+                            'out_for_delivery' => 3,
+                            'delivered' => 4,
+                        ];
+                    }
 
-                $status = strtolower($order->status); // normalize
-                $currentStep = $statusSteps[$status] ?? 0;
+                    $status = strtolower($order->status);
+                    $currentStep = $statusSteps[$status] ?? 0;
+                @endphptStep = $statusSteps[$status] ?? 0;
             @endphp
 
             <div class="mt-8">
@@ -94,13 +105,21 @@
                 <div class="flex items-center justify-between relative">
 
                     @php
-                        $steps = [
-                            1 => 'Pending',
-                            2 => 'In Progress',
-                            3 => 'Ready',
-                            4 => 'Out',
-                            5 => 'Delivered',
-                        ];
+                        if ($isPickup) {
+                            $steps = [
+                                1 => 'Pending',
+                                2 => 'In Progress',
+                                3 => 'Ready for Pickup',
+                                4 => 'Picked Up',
+                            ];
+                        } else {
+                            $steps = [
+                                1 => 'Pending',
+                                2 => 'In Progress',
+                                3 => 'Out for Delivery',
+                                4 => 'Delivered',
+                            ];
+                        }
                     @endphp
 
                     @foreach($steps as $step => $label)
