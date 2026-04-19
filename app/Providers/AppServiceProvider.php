@@ -2,24 +2,29 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use App\Models\Order;
-use App\Models\User;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
+    public function register(): void {}
+
     public function boot(): void
     {
         View::composer('admin.layouts.app', function ($view) {
-
-            $admin = User::where('user_id', session('user_id'))->first();
-
-            $totalOrders = Order::count(); // 👈 IMPORTANT (match dashboard)
-
             $view->with([
-                'admin' => $admin,
-                'totalOrders' => $totalOrders
+                'unreadOrdersCount'    => \App\Models\Order::where('status', 'pending')
+                                            ->where('is_read', false)
+                                            ->count(),
+                'pendingNotifications' => \App\Models\Order::with(['orderDetails.product'])
+                                            ->where('status', 'pending')
+                                            ->where('is_read', false)
+                                            ->latest()
+                                            ->take(5)
+                                            ->get(),
+                'pendingOrders'        => \App\Models\Order::where('status', 'pending')
+                                            ->count(),
             ]);
         });
     }

@@ -83,6 +83,9 @@ Route::middleware('admin.session')->prefix('admin')->name('admin.')->group(funct
     Route::get('/dashboard', [AdminController::class, 'dashboard'])
         ->name('dashboard');
     
+    Route::get('/clients', [AdminController::class, 'clients'])
+        ->name('clients');
+    
     Route::get('/products', [AdminController::class, 'products'])
         ->name('products');
     

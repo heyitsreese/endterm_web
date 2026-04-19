@@ -569,4 +569,41 @@ class AdminController extends Controller
         return redirect()->route('admin.orders.index')
             ->with('success', 'Order created successfully!');
     }
+
+    public function clients()
+    {
+        $registeredClients = User::where('role', 'client')
+            ->withCount('orders')
+            ->withSum('orders', 'total_amount')
+            ->latest()
+            ->paginate(15, ['*'], 'reg_page');
+
+        $walkinClients = Order::whereNull('user_id')
+            ->selectRaw('
+                customer_name,
+                email,
+                phone_number,
+                COUNT(*) as orders_count,
+                SUM(total_amount) as total_spent,
+                MAX(order_date) as last_order
+            ')
+            ->groupBy('customer_name', 'email', 'phone_number')
+            ->orderByDesc('last_order')
+            ->get();
+
+        $totalClients = User::where('role', 'client')->count()
+                    + Order::whereNull('user_id')->distinct('email')->count('email');
+
+        return view('admin.clients', [
+            'registeredClients' => $registeredClients,
+            'walkinClients'     => $walkinClients,
+            'totalClients'      => $totalClients,
+            'activeThisMonth'   => Order::where('created_at', '>=', now()->startOfMonth())
+                                        ->distinct('user_id')->count('user_id'),
+            'newThisMonth'      => User::where('role', 'client')
+                                    ->where('created_at', '>=', now()->startOfMonth())
+                                    ->count(),
+            'avgOrderValue'     => Order::avg('total_amount') ?? 0,
+        ]);
+    }
 }

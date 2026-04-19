@@ -48,9 +48,11 @@
                     </span>
                 </a>
 
-                <a href="#" class="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-gray-100">
-                    <i data-feather="users"></i>
-                    Clients
+                <a href="{{ url('admin/clients') }}" class="flex items-center justify-between px-4 py-2 rounded-xl {{ request()->is('admin/clients') ? 'bg-pink-100 text-pink-600 font-medium' : 'hover:bg-gray-100' }}">
+                    <div class="flex items-center gap-3">    
+                        <i data-feather="users"></i>
+                            Clients
+                    </div>
                 </a>
 
                 <a href="{{ url('admin/products') }}" class="flex items-center gap-3 px-4 py-2 rounded-xl {{ request()->is('admin/products') ? 'bg-pink-100 text-pink-600 font-medium' : 'hover:bg-gray-100' }}">

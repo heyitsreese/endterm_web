@@ -10,15 +10,16 @@ class ClientController extends Controller
 {
     public function dashboard()
     {
+        $orders = Order::where('user_id', session('user_id'))
+                    ->latest()
+                    ->get();
 
-        $userId = session('user_id');
-
-        $client = User::where('user_id', $userId)->first(); // 👈 ADD THIS
-
-        $orders = Order::where('user_id', $userId)
-                        ->latest()
-                        ->get();
-
-        return view('client.dashboard', compact('orders', 'client'));
+        return view('client.dashboard', [
+            'orders'      => $orders,
+            'totalOrders' => $orders->count(),
+            'inProgress'  => $orders->whereIn('status', ['in_progress', 'pending'])->count(),
+            'completed'   => $orders->where('status', 'completed')->count(),
+            'totalSpent'  => $orders->where('status', 'completed')->sum('total_amount'),
+        ]);
     }
 }
