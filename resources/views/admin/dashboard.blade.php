@@ -111,101 +111,56 @@
 </div>
 
 <!-- Reports Dashboard -->
- <div class="mt-6">
+<div class="mt-6">
     <div class="mb-4">
         <h2 class="text-xl font-semibold text-gray-800">Reports</h2>
         <p class="text-sm text-gray-500">Last 7 days overview</p>
     </div>
- 
+
     {{-- ── TOP ROW: Daily Sales + Orders Per Day ── --}}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
- 
+
         {{-- DAILY SALES CHART --}}
         <div class="bg-white rounded-2xl shadow p-5" style="border:solid #00000010; border-radius: 14px; border-width: 0.8px;">
             <div class="mb-4">
                 <h3 class="font-semibold text-gray-700">Daily Sales</h3>
                 <p class="text-xs text-gray-400">Revenue from completed orders</p>
             </div>
- 
-            {{-- Bar chart rendered in CSS/JS --}}
-            <div class="flex items-end gap-2 h-36" id="salesBars">
-                @php $maxSales = $dailySalesChart->max('total_sales') ?: 1; @endphp
- 
-                @foreach($dailySalesChart as $day)
-                    @php $heightPct = max(4, round(($day['total_sales'] / $maxSales) * 100)); @endphp
-                    <div class="flex-1 flex flex-col items-center gap-1 group">
-                        <div class="relative w-full flex justify-center">
-                            {{-- Tooltip --}}
-                            <div class="absolute bottom-full mb-1 hidden group-hover:flex flex-col items-center z-10">
-                                <div class="bg-gray-800 text-white text-xs rounded-lg px-2 py-1 whitespace-nowrap shadow-lg">
-                                    ₱{{ number_format($day['total_sales'], 2) }}
-                                </div>
-                                <div class="w-2 h-2 bg-gray-800 rotate-45 -mt-1"></div>
-                            </div>
-                            {{-- Bar --}}
-                            <div class="w-full rounded-t-md transition-all duration-500 bg-blue-400 hover:bg-blue-500 cursor-pointer" style="--bar-h: {{ $heightPct }}%; height: var(--bar-h); min-height: 4px;"></div>
-                        </div>
-                        <span class="text-xs text-gray-400 text-center">{{ $day['label'] }}</span>
-                    </div>
-                @endforeach
+            <div class="relative" style="height: 160px;">
+                <canvas id="dailySalesChart"></canvas>
             </div>
- 
-            {{-- Summary totals --}}
             <div class="mt-4 pt-3 border-t border-gray-100 flex justify-between text-xs text-gray-500">
                 <span>7-day total:</span>
                 <span class="font-semibold text-gray-700">₱{{ number_format($dailySalesChart->sum('total_sales'), 2) }}</span>
             </div>
         </div>
- 
+
         {{-- ORDERS PER DAY CHART --}}
         <div class="bg-white rounded-2xl shadow p-5" style="border:solid #00000010; border-radius: 14px; border-width: 0.8px;">
             <div class="mb-4">
                 <h3 class="font-semibold text-gray-700">Orders Per Day</h3>
                 <p class="text-xs text-gray-400">Number of completed orders daily</p>
             </div>
- 
-            <div class="flex items-end gap-2 h-36">
-                @php $maxOrders = $dailySalesChart->max('order_count') ?: 1; @endphp
- 
-                @foreach($dailySalesChart as $day)
-                    @php $heightPct = max(4, round(($day['order_count'] / $maxOrders) * 100)); @endphp
-                    <div class="flex-1 flex flex-col items-center gap-1 group">
-                        <div class="relative w-full flex justify-center">
-                            {{-- Tooltip --}}
-                            <div class="absolute bottom-full mb-1 hidden group-hover:flex flex-col items-center z-10">
-                                <div class="bg-gray-800 text-white text-xs rounded-lg px-2 py-1 whitespace-nowrap shadow-lg">
-                                    {{ $day['order_count'] }} {{ Str::plural('order', $day['order_count']) }}
-                                </div>
-                                <div class="w-2 h-2 bg-gray-800 rotate-45 -mt-1"></div>
-                            </div>
-                            {{-- Bar --}}
-                            <div
-                                class="w-full rounded-t-md transition-all duration-500 bg-blue-400 hover:bg-blue-500 cursor-pointer"
-                                style="--bar-h: {{ $heightPct }}%; height: var(--bar-h); min-height: 4px;">
-                            </div>
-                        </div>
-                        <span class="text-xs text-gray-400 text-center">{{ $day['label'] }}</span>
-                    </div>
-                @endforeach
+            <div class="relative" style="height: 160px;">
+                <canvas id="dailyOrdersChart"></canvas>
             </div>
- 
             <div class="mt-4 pt-3 border-t border-gray-100 flex justify-between text-xs text-gray-500">
                 <span>7-day total:</span>
                 <span class="font-semibold text-gray-700">{{ $dailySalesChart->sum('order_count') }} orders</span>
             </div>
         </div>
- 
+
     </div>
- 
+
     {{-- ── MOST REQUESTED SERVICES ── --}}
     <div class="bg-white rounded-2xl shadow p-5" style="border:solid #00000010; border-radius: 14px; border-width: 0.8px;">
         <div class="mb-4">
             <h3 class="font-semibold text-gray-700">Most Requested Services</h3>
             <p class="text-xs text-gray-400">Ranked by total quantity ordered (all time)</p>
         </div>
- 
+
         @php $maxQty = $topServices->max('total_qty') ?: 1; @endphp
- 
+
         <div class="space-y-4">
             @forelse($topServices as $index => $service)
                 @php
@@ -213,14 +168,11 @@
                     $colors = ['bg-pink-400','bg-purple-400','bg-blue-400','bg-green-400','bg-orange-400'];
                     $color  = $colors[$index % count($colors)];
                 @endphp
- 
+
                 <div class="flex items-center gap-4">
-                    {{-- Rank badge --}}
                     <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 shrink-0">
                         {{ $index + 1 }}
                     </div>
- 
-                    {{-- Name & bar --}}
                     <div class="flex-1">
                         <div class="flex justify-between text-sm mb-1">
                             <span class="font-medium text-gray-700">
@@ -230,9 +182,7 @@
                                 {{ number_format($service->total_qty) }} pcs · {{ $service->order_count }} orders
                             </span>
                         </div>
-                        <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div class="h-full {{ $color }} rounded-full transition-all duration-700" style="--bar-w: {{ $barWidth }}%; width: var(--bar-w);"></div>
-                        </div>
+                        <div class="h-full {{ $color }} rounded-full transition-all duration-700" style="width: {{ $barWidth }}%"></div>
                     </div>
                 </div>
             @empty
@@ -240,7 +190,116 @@
             @endforelse
         </div>
     </div>
- 
+
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const labels = @json(array_column($dailySalesChart, 'label'));
+    const sales = @json(array_column($dailySalesChart, 'total_sales'));
+    const orders = @json(array_column($dailySalesChart, 'order_count'));
+
+    Chart.defaults.font.family = 'inherit';
+
+    new Chart(document.getElementById('dailySalesChart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Sales (₱)',
+                data: sales,
+                borderColor: '#60a5fa',
+                backgroundColor: 'rgba(96,165,250,0.10)',
+                borderWidth: 2.5,
+                pointBackgroundColor: '#3b82f6',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                tension: 0.4,
+                fill: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 700, easing: 'easeOutQuart' },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1f2937',
+                    titleColor: '#9ca3af',
+                    bodyColor: '#f9fafb',
+                    padding: 10,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(ctx) {
+                            return ' ₱' + Number(ctx.parsed.y).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#9ca3af', font: { size: 11 } } },
+                y: {
+                    grid: { color: '#f3f4f6' },
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#9ca3af',
+                        font: { size: 11 },
+                        callback: function(v) { return '₱' + Number(v).toLocaleString('en-PH'); }
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('dailyOrdersChart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Orders',
+                data: orders,
+                backgroundColor: 'rgba(96,165,250,0.70)',
+                hoverBackgroundColor: '#3b82f6',
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 700, easing: 'easeOutQuart' },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1f2937',
+                    titleColor: '#9ca3af',
+                    bodyColor: '#f9fafb',
+                    padding: 10,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(ctx) {
+                            return ' ' + ctx.parsed.y + (ctx.parsed.y === 1 ? ' order' : ' orders');
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#9ca3af', font: { size: 11 } } },
+                y: {
+                    grid: { color: '#f3f4f6' },
+                    beginAtZero: true,
+                    ticks: { color: '#9ca3af', font: { size: 11 }, precision: 0 }
+                }
+            }
+        }
+    });
+
+});
+</script>
 
 @endsection

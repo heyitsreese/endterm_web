@@ -38,21 +38,6 @@
                     <i data-feather="grid"></i> Dashboard
                 </a>
 
-                <a href="{{ route('client.create-order') }}"
-                    class="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-gray-100">
-                    <i data-feather="plus-circle"></i> Create Order
-                </a>
-
-                <a href="#"
-                    class="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-gray-100">
-                    <i data-feather="shopping-bag"></i> My Orders
-                </a>
-
-                <a href="#"
-                    class="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-gray-100">
-                    <i data-feather="user"></i> Profile
-                </a>
-
             </nav>
         </div>
 
