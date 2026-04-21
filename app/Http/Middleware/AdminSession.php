@@ -1,0 +1,22 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+
+class AdminSession
+{
+    public function handle(Request $request, Closure $next)
+    {
+        if (!session('user_id')) {
+            return redirect('/login');
+        }
+
+        if (session('role') !== 'admin') {
+            return redirect('/client/dashboard');
+        }
+
+        return $next($request);
+    }
+}
