@@ -107,8 +107,12 @@
                     <i class="fa-solid fa-layer-group text-gray-400"></i>
                     How Many Do You Need?<span class="text-red-600">*</span>
                 </label>
-                <input type="number" name="quantity"
+                <input type="number" 
+                name="quantity"
                 required
+                min="1"
+                max="10000"
+                step="1"
                 value="{{ session('quantity') }}"
                 placeholder="e.g., 100"
                 class="w-full mt-2 px-4 py-3 rounded-lg bg-gray-100 focus:ring-2 focus:ring-pink-400">
@@ -249,6 +253,23 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const qty = document.querySelector('input[name="quantity"]');
+
+    qty.addEventListener("input", function () {
+        let value = parseInt(this.value);
+
+        if (value > 10000) {
+            this.value = 10000;
+        }
+
+        if (value < 1) {
+            this.value = 1;
+        }
+    });
 });
 </script>
 

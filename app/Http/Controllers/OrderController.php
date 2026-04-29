@@ -31,7 +31,7 @@ class OrderController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,product_id',
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|integer|min:1|max:10000',
             'paper_size' => 'required',
             'color' => 'required',
             'paper_quality' => 'required',
