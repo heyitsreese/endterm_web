@@ -23,7 +23,7 @@ class OrderController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
         ]);
-
+      
         return redirect()->route('order.step2');
     }
     
