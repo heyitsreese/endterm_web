@@ -90,7 +90,12 @@
                 </p>
 
                 <!-- ✅ IMPORTANT: name added -->
-                <input type="file" id="fileElem" name="files[]" multiple class="hidden">
+                <input type="file"
+                    id="fileElem"
+                    name="files[]"
+                    multiple
+                    accept=".pdf,.jpg,.jpeg,.png,.psd"
+                    class="hidden">
 
                 <button type="button"
                         class="mt-4 px-4 py-2 border rounded-lg bg-white">
@@ -98,7 +103,7 @@
                 </button>
 
                 <p class="text-xs text-gray-400 mt-4">
-                    Supported: PDF, JPG, PNG • Max size: 50MB
+                    Supported: PDF, JPG, PNG, PSD • Max size: 50MB
                 </p>
             </div>
 
