@@ -1,4 +1,4 @@
-
+dd(session()->all());
 <!-- order-step4.blade.php -->
 @extends('layouts.content')
 
@@ -193,7 +193,7 @@
                                     @if(in_array(strtolower($extension), ['jpg','jpeg','png']))
                                         <img src="{{ asset('storage/' . (is_array($file) ? $file['path'] : $file)) }}" class="w-full h-32 object-cover rounded mb-2">
 
-                                        <button type="button" data-src="{{ is_array($file) ? $file['name'] : basename($file) }}" class="preview-btn text-xs text-pink-600 hover:underline">
+                                        <button type="button" data-src="{{ asset('storage/' . (is_array($file) ? $file['path'] : $file)) }}" class="preview-btn text-xs text-pink-600 hover:underline">
                                             Preview
                                         </button>
                                     @else

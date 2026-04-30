@@ -140,9 +140,7 @@ Route::post('/logout', function () {
 
 // ORDERS
 Route::get('/order', function (Request $request) {
-
-    session()->forget('files');
-
+if ($request->has('start')) {
     session()->forget([
         'files',
         'service',
@@ -152,7 +150,7 @@ Route::get('/order', function (Request $request) {
         'paper_quality',
         'instructions',
     ]);
-
+}
     $productId = $request->product_id;
 
     return view('order-page', compact('productId'));
@@ -173,49 +171,45 @@ Route::get('/order/step-3', function () {
 
 Route::post('/order/step-3', function (Request $request) {
 
-    // ✅ handle custom size
-    $paperSize = $request->paper_size === 'Custom'
-        ? $request->custom_size
-        : $request->paper_size;
+    $files = session('files', []);
 
-    session([
-        'product_id' => $request->product_id,
-        'quantity' => $request->quantity,
-        'paper_size' => $paperSize,
-        'color' => $request->color,
-        'paper_quality' => $request->paper_quality,
-        'instructions' => $request->instructions,
-    ]);
+    if ($request->hasFile('files')) {
 
-    return redirect()->route('order.step3');
-});
+        foreach ($request->file('files') as $file) {
+
+            $filename = time() . '_' . $file->getClientOriginalName();
+
+            $path = $file->storeAs('uploads/orders', $filename, 'public');
+
+            $files[] = [
+                'name' => $file->getClientOriginalName(),
+                'path' => $path
+            ];
+        }
+
+        session(['files' => $files]);
+    }
+
+    return redirect()->route('order.step4');
+
+})->name('order.step3.store');
 
 Route::get('/order/step-4', function () {
+       
     return view('order-step4');
 })->name('order.step4');
 
-Route::post('/order/step-4', function (Request $request) {
+Route::post('/order/file/delete', function (Request $request) {
 
-    $paths = session('files', []);
+    $files = session('files', []);
 
-    if ($request->hasFile('files')) {
-        foreach ($request->file('files') as $file) {
-
-            $storedPath = $file->store('uploads', 'public');
-
-            $paths[] = [
-                'path' => $storedPath,
-                'name' => $file->getClientOriginalName()
-            ];
-        }
+    if (isset($files[$request->index])) {
+        unset($files[$request->index]);
+        session(['files' => array_values($files)]);
     }
 
-    session([
-        'files' => $paths
-    ]);
-
-    return redirect()->route('order.step4');
-});
+    return response()->json(['success' => true]);
+})->name('order.file.delete');
 
 Route::post('/order/store', [OrderController::class, 'store'])->name('order.store');
 
