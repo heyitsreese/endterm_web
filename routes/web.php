@@ -171,6 +171,10 @@ Route::get('/order/step-3', function () {
 
 Route::post('/order/step-3', function (Request $request) {
 
+    if (!$request->hasFile('files')) {
+    return back()->with('error', 'Please upload at least one file.');
+    }
+    
     $files = session('files', []);
 
     if ($request->hasFile('files')) {

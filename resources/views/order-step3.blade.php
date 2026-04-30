@@ -164,10 +164,11 @@
 
             <!-- ✅ NOW SUBMITS -->
             <button type="submit"
-                    class="text-white px-6 py-3 rounded-lg shadow"
-                    style="background-color: #D47497;">
-                Continue →
-            </button>
+                id="continueBtn"
+                class="text-white px-6 py-3 rounded-lg shadow opacity-50 cursor-not-allowed"
+                style="background-color: #D47497;"
+                disabled>
+            Continue →
         </div>
 
     </form>
@@ -209,9 +210,14 @@ document.addEventListener("DOMContentLoaded", function () {
     function renderFileList() {
 
         fileList.innerHTML = "";
+        const continueBtn = document.getElementById("continueBtn");
 
         if (selectedFiles.length === 0) {
             fileList.innerHTML = `<p class="text-sm text-gray-400">No files selected yet.</p>`;
+
+            continueBtn.disabled = true;
+            continueBtn.classList.add("opacity-50", "cursor-not-allowed");
+
             return;
         }
 
@@ -237,6 +243,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
             fileList.appendChild(div);
         });
+        
+        continueBtn.disabled = false;
+        continueBtn.classList.remove("opacity-50", "cursor-not-allowed");
     }
 
     window.removeFile = function(index) {
