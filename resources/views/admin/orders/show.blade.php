@@ -122,58 +122,41 @@
 
                             <!-- FILE -->
                             <td class="p-3 text-center align-middle">
-                                @php
-                                    $files = [];
-
-                                    if (!empty($detail->file_path)) {
-
-                                        // Try decode JSON
-                                        $decoded = json_decode($detail->file_path, true);
-
-                                        if (is_array($decoded)) {
-                                            $files = $decoded; // multiple files
-                                        } else {
-                                            // single file fallback
-                                            $files = [[
-                                                'path' => $detail->file_path,
-                                                'name' => basename($detail->file_path)
-                                            ]];
-                                        }
-                                    }
-                                @endphp
-
-                                @if(count($files) > 0)
+                                @if($order->fileUploads->count() > 0)
                                     <div class="flex flex-col items-center gap-3">
-                                        @foreach($files as $file)
-                                            <div class="text-xs text-gray-600 font-medium truncate max-w-[120px]">
-                                                {{ $file['name'] }}
+                                        @foreach($order->fileUploads as $file)
+                                            <div class="text-xs text-gray-600 font-medium truncate max-w-[150px]">
+                                                {{ $file->file_name }}
                                             </div>
 
                                             <div class="flex gap-2">
                                                 {{-- VIEW --}}
-                                                <a href="{{ asset('storage/' . $file['path']) }}"
+                                                <a href="{{ asset('storage/' . $file->file_path) }}"
                                                     target="_blank"
                                                     class="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg text-xs hover:bg-blue-200">
                                                     👁 View
                                                 </a>
 
                                                 {{-- DOWNLOAD --}}
-                                                <a href="{{ asset('storage/' . $file['path']) }}"
-                                                    download="{{ $file['name'] }}"
+                                                <a href="{{ asset('storage/' . $file->file_path) }}"
+                                                    download="{{ $file->file_name }}"
                                                     class="px-3 py-1 bg-green-100 text-green-600 rounded-lg text-xs hover:bg-green-200">
                                                     ⬇ Download
                                                 </a>
                                             </div>
 
                                             {{-- THUMBNAIL PREVIEW FOR IMAGES --}}
-                                            @if(Str::endsWith($file['path'], ['jpg','jpeg','png']))
-                                                <img src="{{ asset('storage/' . $file['path']) }}"
-                                                    class="w-20 h-20 object-cover rounded-lg border shadow-sm">
+                                            @php
+                                                $ext = strtolower(pathinfo($file->file_path, PATHINFO_EXTENSION));
+                                            @endphp
+                                            @if(in_array($ext, ['jpg','jpeg','png']))
+                                                <img src="{{ asset('storage/' . $file->file_path) }}"
+                                                    class="w-24 h-24 object-cover rounded-lg border shadow-sm">
                                             @endif
                                         @endforeach
                                     </div>
                                 @else
-                                    <span class="text-gray-400 text-sm">No file</span>
+                                    <span class="text-gray-400 text-sm">No files uploaded</span>
                                 @endif
                             </td>
 
