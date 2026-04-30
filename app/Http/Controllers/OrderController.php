@@ -134,7 +134,7 @@ class OrderController extends Controller
         $deliveryType = $request->delivery_type ?? session('delivery_type') ?? 'pickup';
 
         $request->validate([
-            'phone' => ['required', 'regex:/^\+63\s9\d{2}\s\d{3}\s\d{4}$/']
+            'phone' => ['required', 'regex:/^\+63[\s]?\d{3}[\s]?\d{3}[\s]?\d{4}$/']
         ]);
 
         // 🔥 PRODUCT
@@ -168,6 +168,7 @@ class OrderController extends Controller
             'customer_name' => $name,
             'email' => $email,
             'phone_number' => $phone,
+            'delivery_type' => $deliveryType,
             'status' => 'pending',
             'order_token' => Str::random(10),
             'total_amount' => $total,

@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan *)",
+      "Read(//c/xampp/mysql/bin/**)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/laragon/bin/**)",
+      "Read(//c/wamp64/bin/**)",
+      "Bash(/c/xampp/mysql/bin/mysql.exe *)",
+      "Bash(curl -s -o /dev/null -w \"GET / → %{http_code}\\\\n\" http://127.0.0.1:8000/)",
+      "Bash(curl -s -o /dev/null -w \"GET /login → %{http_code}\\\\n\" http://127.0.0.1:8000/login)",
+      "Bash(curl -s -o /dev/null -w \"GET /register → %{http_code}\\\\n\" http://127.0.0.1:8000/register)",
+      "Bash(curl -s -o /dev/null -w \"GET /track → %{http_code}\\\\n\" http://127.0.0.1:8000/track)",
+      "Bash(curl -s -o /dev/null -w \"GET /client/dashboard \\(no-auth\\) → %{http_code}\\\\n\" http://127.0.0.1:8000/client/dashboard)",
+      "Bash(php *)",
+      "Bash(rm -f /tmp/cookies.txt)",
+      "Bash(curl -s -c /tmp/cookies.txt http://127.0.0.1:8000/login)",
+      "Bash(curl -s -b /tmp/cookies.txt -o /tmp/dash.html -w \"Dashboard \\(auth\\) → %{http_code}\\\\n\" http://127.0.0.1:8000/client/dashboard)",
+      "Read(//tmp/**)",
+      "Bash(curl -s -b /tmp/cookies.txt -o /tmp/create.html -w \"Create-order → %{http_code}\\\\n\" http://127.0.0.1:8000/client/create-order)",
+      "Bash(curl -s -b /tmp/cookies.txt -o /tmp/track.html -w \"Track → %{http_code}\\\\n\" \"http://127.0.0.1:8000/track?order_id=ORD-0032\")",
+      "Bash(curl -s -b /tmp/cookies.txt -o /tmp/success.html -w \"Order success → %{http_code}\\\\n\" http://127.0.0.1:8000/client/order-success/32)",
+      "Bash(git checkout *)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)"
+    ]
+  }
+}

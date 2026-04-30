@@ -80,22 +80,6 @@
                     @yield('header')
                 </div>
 
-                <!-- GLOBAL: search + bell -->
-                <div class="flex items-center gap-2 shrink-0">
-                    <form action="{{ url('admin/orders') }}" method="GET" class="relative">
-                        <div class="absolute inset-y-0 left-3 flex items-center text-gray-400">
-                            <i data-feather="search" class="w-4 h-4"></i>
-                        </div>
-                        <input type="text" name="search" placeholder="Search..."
-                                value="{{ request('search') }}"
-                                class="pl-9 pr-3 py-2 rounded-xl bg-gray-50 border border-transparent
-                                    focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white
-                                    text-sm text-gray-600 placeholder-gray-400 font-medium
-                                    transition-all"
-                                style="width: clamp(80px, 25vw, 224px);">
-                    </form>
-                </div>
-
             </div>
         </div>
 
@@ -364,22 +348,24 @@ function toggleDay(checkbox) {
 const notifBtn = document.getElementById('notifBtn');
 const notifDropdown = document.getElementById('notifDropdown');
 
-notifBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    
-    // Position dropdown below the bell button
-    const rect = notifBtn.getBoundingClientRect();
-    notifDropdown.style.top = (rect.bottom + 8) + 'px';
-    notifDropdown.style.right = (window.innerWidth - rect.right) + 'px';
-    
-    notifDropdown.classList.toggle('hidden');
-});
+if (notifBtn && notifDropdown) {
+    notifBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        // Position dropdown below the bell button
+        const rect = notifBtn.getBoundingClientRect();
+        notifDropdown.style.top = (rect.bottom + 8) + 'px';
+        notifDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+        
+        notifDropdown.classList.toggle('hidden');
+    });
 
-document.addEventListener('click', function(e) {
-    if (!notifDropdown.contains(e.target) && e.target !== notifBtn) {
-        notifDropdown.classList.add('hidden');
-    }
-});
+    document.addEventListener('click', function(e) {
+        if (!notifDropdown.contains(e.target) && e.target !== notifBtn) {
+            notifDropdown.classList.add('hidden');
+        }
+    });
+}
 </script>
 
 <script>

@@ -74,6 +74,15 @@ Route::middleware(['web', 'auth.session'])->prefix('client')->group(function () 
         
     })->name('client.order.success');
 
+    Route::get('/orders/{id}/json', [ClientController::class, 'showOrder'])
+        ->name('client.order.show');
+
+    Route::get('/orders/{id}/download/{detailIndex}', [ClientController::class, 'downloadFile'])
+        ->name('client.order.download');
+
+    Route::get('/track', [ClientController::class, 'track'])
+        ->name('client.track');
+
 });
 
 // ADMIN

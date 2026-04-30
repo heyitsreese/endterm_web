@@ -88,10 +88,10 @@
     <!-- BUTTONS -->
     <div class="flex flex-col md:flex-row gap-3 mt-6">
 
-        <a href="#"
+        <a href="{{ route('client.dashboard') }}"
             class="flex-1 text-center text-white py-3 rounded-lg"
             style="background-color: #D47497;">
-            <i class="fa-solid fa-magnifying-glass"></i> View Order
+            <i class="fa-solid fa-magnifying-glass"></i> View Orders
         </a>
 
         <a href="{{ route('client.create-order') }}"
