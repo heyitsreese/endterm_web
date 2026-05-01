@@ -23,15 +23,16 @@ class OrderController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
         ]);
-
+      
         return redirect()->route('order.step2');
     }
     
     public function step2Store(Request $request)
     {
+        
         $request->validate([
             'product_id' => 'required|exists:products,product_id',
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|integer|min:1|max:10000',
             'paper_size' => 'required',
             'color' => 'required',
             'paper_quality' => 'required',
@@ -56,30 +57,28 @@ class OrderController extends Controller
         return view('order-step2', compact('products'));
     }
 
-    public function step4(Request $request)
-    {
-        // make sure files exist
-        if ($request->hasFile('files')) {
+public function step4(Request $request)
+{
+    $storedFiles = [];
 
-            foreach ($request->file('files') as $file) {
+    if ($request->hasFile('files')) {
+         $storedFiles = [];
+        foreach ($request->file('files') as $file) {
+            $filename = time() . '_' . $file->getClientOriginalName();
 
-                // generate unique name
-                $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('uploads', $filename, 'public');
 
-                // store file
-                $path = $file->storeAs('uploads', $filename, 'public');
-
-                // save to database
-                OrderDetail::create([
-                    'order_id' => session('order_id'), // make sure this exists
-                    'file_path' => $path,
-                ]);
-            }
+            $storedFiles[] = [
+                'name' => $file->getClientOriginalName(),
+                'path' => $path,
+            ];
         }
-
-        return redirect()->route('order.step4')
-            ->with('success', 'Files uploaded!');
     }
+
+    session(['files' => $storedFiles]);
+
+    return redirect()->route('order.step4.preview');
+}
 
     public function track(Request $request)
     {
@@ -134,7 +133,7 @@ class OrderController extends Controller
         $deliveryType = $request->delivery_type ?? session('delivery_type') ?? 'pickup';
 
         $request->validate([
-            'phone' => ['required', 'regex:/^\+63\s9\d{2}\s\d{3}\s\d{4}$/']
+            'phone' => ['required', 'regex:/^\+63[\s]?\d{3}[\s]?\d{3}[\s]?\d{4}$/']
         ]);
 
         // 🔥 PRODUCT
@@ -168,6 +167,7 @@ class OrderController extends Controller
             'customer_name' => $name,
             'email' => $email,
             'phone_number' => $phone,
+            'delivery_type' => $deliveryType,
             'status' => 'pending',
             'order_token' => Str::random(10),
             'total_amount' => $total,

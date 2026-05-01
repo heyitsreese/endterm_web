@@ -1,4 +1,4 @@
-
+dd(session()->all());
 <!-- order-step4.blade.php -->
 @extends('layouts.content')
 
@@ -88,6 +88,22 @@
 
     <form method="POST" action="{{ route('order.store') }}">
     @csrf
+
+    @if($errors->any())
+        <div class="bg-red-100 text-red-700 p-4 rounded-lg mt-4">
+            <ul class="list-disc ml-4">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="bg-red-100 text-red-700 p-4 rounded-lg mt-4">
+            {{ session('error') }}
+        </div>
+    @endif
 
         <!-- ORDER SUMMARY -->
 
@@ -193,7 +209,7 @@
                                     @if(in_array(strtolower($extension), ['jpg','jpeg','png']))
                                         <img src="{{ asset('storage/' . (is_array($file) ? $file['path'] : $file)) }}" class="w-full h-32 object-cover rounded mb-2">
 
-                                        <button type="button" data-src="{{ is_array($file) ? $file['name'] : basename($file) }}" class="preview-btn text-xs text-pink-600 hover:underline">
+                                        <button type="button" data-src="{{ asset('storage/' . (is_array($file) ? $file['path'] : $file)) }}" class="preview-btn text-xs text-pink-600 hover:underline">
                                             Preview
                                         </button>
                                     @else
@@ -298,7 +314,7 @@
 
                 <label for="delivery_pickup" class="option-card delivery-option cursor-pointer border border-gray-200 p-4 rounded-lg transition hover:border-pink-300">
                     <input id="delivery_pickup" type="radio" name="delivery_type" value="pickup" required class="sr-only delivery-type-input"
-                        {{ session('delivery_type') == 'pickup' ? 'checked' : '' }}>
+                        {{ (session('delivery_type', 'pickup')) == 'pickup' ? 'checked' : '' }}>
                     <span class="block font-medium">📦 Pick up Order</span>
                     <span class="text-xs text-gray-500">Claim your order at our store.</span>
                 </label>

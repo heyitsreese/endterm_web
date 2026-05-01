@@ -5,6 +5,7 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\User;
 use App\Models\Product;
+use App\Models\FileUpload;
 use App\Services\PriceService;
 use Carbon\Carbon;
 
@@ -204,17 +205,31 @@ $orders = Order::with(['orderDetails.product'])
         }
 
         $order->save();
-
         return response()->json(['success' => true]);
-        dd($request->all());
     }
 
-    public function show($id)
+    public function show($id, Request $request)
     {
-        $order = \App\Models\Order::with('orderDetails.product')
+        $order = Order::with(['orderDetails.product', 'fileUploads'])
                     ->findOrFail($id);
 
-        return view('admin.orders.show', compact('order'));
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json($order);
+        }
+
+        $admin = User::where('user_id', session('user_id'))->first();
+        $pendingOrders = Order::where('status', 'pending')->count();
+        $unreadOrdersCount = Order::where('status', 'pending')
+            ->where('is_read', false)
+            ->count();
+        $pendingNotifications = Order::with(['orderDetails.product'])
+            ->where('status', 'pending')
+            ->where('is_read', false)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('admin.orders.show', compact('order', 'admin', 'pendingOrders', 'unreadOrdersCount', 'pendingNotifications'));
     }
 
     public function edit($id)
@@ -222,7 +237,19 @@ $orders = Order::with(['orderDetails.product'])
         $order = \App\Models\Order::with('orderDetails.product')
                     ->findOrFail($id);
 
-        return view('admin.orders.edit', compact('order'));
+        $admin = User::where('user_id', session('user_id'))->first();
+        $pendingOrders = Order::where('status', 'pending')->count();
+        $unreadOrdersCount = Order::where('status', 'pending')
+            ->where('is_read', false)
+            ->count();
+        $pendingNotifications = Order::with(['orderDetails.product'])
+            ->where('status', 'pending')
+            ->where('is_read', false)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('admin.orders.edit', compact('order', 'admin', 'pendingOrders', 'unreadOrdersCount', 'pendingNotifications'));
     }
 
     public function destroy($id)
@@ -569,6 +596,16 @@ $orders = Order::with(['orderDetails.product'])
             'file_path' => $paths[0]['path'] ?? null,
             'special_instruction' => $request->instructions
         ]);
+
+        // 📂 SAVE ALL FILES
+        foreach ($paths as $path) {
+            FileUpload::create([
+                'order_id' => $order->order_id,
+                'file_name' => $path['name'],
+                'file_path' => $path['path'],
+                'upload_date' => now(),
+            ]);
+        }
 
         return redirect()->route('admin.orders.index')
             ->with('success', 'Order created successfully!');

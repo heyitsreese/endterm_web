@@ -69,6 +69,22 @@ m
 
 </div>
 
+        <div id="ordersFilterPanel" class="hidden bg-white border rounded-lg p-4 mb-4">
+            <form method="GET" action="{{ url('admin/orders') }}" class="flex flex-wrap gap-2 items-center">
+                <select name="status" class="border rounded px-3 py-2 text-sm">
+                    <option value="">All Statuses</option>
+                    @foreach(['pending','in_progress','ready_for_pickup','out_for_delivery','delivered','picked_up','declined'] as $s)
+                        <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>
+                            {{ ucfirst(str_replace('_', ' ', $s)) }}
+                        </option>
+                    @endforeach
+                </select>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search..." class="border rounded px-3 py-2 text-sm">
+                <button type="submit" class="px-4 py-2 bg-pink-500 text-white rounded-lg text-sm">Apply</button>
+                <a href="{{ url('admin/orders') }}" class="px-4 py-2 border rounded-lg text-sm">Reset</a>
+            </form>
+        </div>
+
 @if(request('search'))
     <div class="mb-4 px-4 py-2 bg-pink-50 border border-pink-200 rounded-xl text-sm text-pink-600 flex justify-between items-center">
         <span>Showing results for: <strong>{{ request('search') }}</strong></span>
@@ -203,10 +219,11 @@ m
                             <div class="flex gap-2">
 
                                 <!-- VIEW -->
-                                <a href="{{ route('admin.orders.show', $order->order_id) }}"
-                                class="px-3 py-2 text-sm bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200">
+                                <button type="button" 
+                                    onclick="openOrderModal('{{ $order->order_id }}')"
+                                    class="px-3 py-2 text-sm bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200">
                                     View
-                                </a>
+                                </button>
 
                                 <!-- EDIT -->
                                 <a href="{{ route('admin.orders.edit', $order->order_id) }}"
@@ -477,10 +494,41 @@ function toggleDropdown(orderId) {
 
     const rect = button.getBoundingClientRect();
 
-    dropdown.style.top = `${rect.bottom + window.scrollY}px`;
-    dropdown.style.left = `${rect.left + window.scrollX}px`;
+    dropdown.style.top = `${rect.bottom}px`;
+    dropdown.style.left = `${rect.left}px`;
 
     dropdown.classList.toggle('hidden');
+}
+
+function toggleOrdersFilter() {
+    document.getElementById('ordersFilterPanel').classList.toggle('hidden');
+}
+
+function exportOrders() {
+    const rows = [['Order ID','Client','Service','Quantity','Status','Delivery','Date','Amount']];
+    document.querySelectorAll('tbody tr[id^="order-row-"]').forEach(tr => {
+        const tds = tr.querySelectorAll('td');
+        if (tds.length >= 8) {
+            rows.push([
+                tds[0]?.innerText.trim(),
+                tds[1]?.innerText.trim(),
+                tds[2]?.innerText.trim(),
+                tds[3]?.innerText.trim(),
+                tds[4]?.innerText.trim().replace(/\s+/g,' '),
+                tds[5]?.innerText.trim(),
+                tds[6]?.innerText.trim(),
+                tds[7]?.innerText.trim(),
+            ]);
+        }
+    });
+    const csv = rows.map(r => r.map(c => `"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `orders-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 </script>
 

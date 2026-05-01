@@ -72,6 +72,7 @@
                     <th>Quantity</th>
                     <th>Status</th>
                     <th>Date</th>
+                    <th></th>
                     <th>Amount</th>
                 </tr>
             </thead>
@@ -101,6 +102,9 @@
                         @endif
                     </td>
                     <td>{{ $order->order_date }}</td>
+                    <td>
+                        <button type="button" onclick="openOrderModal('{{ $order->order_id }}')" class="text-indigo-600 hover:underline">View</button>
+                    </td>
                     <td>₱{{ number_format($order->total_amount, 2) }}</td>
                 </tr>
                 @endforeach

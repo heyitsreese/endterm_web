@@ -245,7 +245,16 @@ window.addEventListener('resize', function () {
 </script>
 
 <script>
-    feather.replace()
+    function refreshFeather() {
+        if (typeof feather !== 'undefined') feather.replace();
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', refreshFeather);
+    } else {
+        refreshFeather();
+    }
+    window.addEventListener('load', refreshFeather);
+    window.refreshFeather = refreshFeather;
 </script>
 
 <script>

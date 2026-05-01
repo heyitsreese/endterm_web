@@ -60,7 +60,15 @@
     <!-- ✅ FORM START -->
     <form method="POST" action="{{ route('order.step2.store') }}">
         @csrf
-
+            @if ($errors->any())
+                <div class="bg-red-100 text-red-700 p-3 rounded-lg mb-4">
+                    <ul class="list-disc ml-5">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
         <!-- CARD -->
         <div class="bg-white rounded-2xl shadow-lg p-8 mt-8">
 
@@ -99,8 +107,12 @@
                     <i class="fa-solid fa-layer-group text-gray-400"></i>
                     How Many Do You Need?<span class="text-red-600">*</span>
                 </label>
-                <input type="number" name="quantity"
+                <input type="number" 
+                name="quantity"
                 required
+                min="1"
+                max="10000"
+                step="1"
                 value="{{ session('quantity') }}"
                 placeholder="e.g., 100"
                 class="w-full mt-2 px-4 py-3 rounded-lg bg-gray-100 focus:ring-2 focus:ring-pink-400">
@@ -167,11 +179,18 @@
             <div class="mb-6">
                 <label class="font-medium">Paper Quality<span class="text-red-600">*</span></label>
                 <select name="paper_quality"
-                        class="w-full mt-2 px-4 py-3 rounded-lg bg-gray-100">
-                    <option value="">Choose paper quality</option>
-                    <option value="Glossy" {{ session('paper_quality') === 'Glossy' ? 'selected' : '' }}>Glossy</option>
-                    <option value="Matte" {{ session('paper_quality') === 'Matte' ? 'selected' : '' }}>Matte</option>
-                    <option value="Premium" {{ session('paper_quality') === 'Premium' ? 'selected' : '' }}>Premium</option>
+                        required
+                        class="w-full mt-2 px-4 py-3 rounded-lg bg-gray-100 border
+                        {{ $errors->has('paper_quality') ? 'border-red-500' : '' }}">
+                    <option value="" disabled selected>Choose paper quality</option>
+                        <option value="Glossy"
+                            {{ old('paper_quality', session('paper_quality')) == 'Glossy' ? 'selected' : '' }}> Glossy </option>
+
+                        <option value="Matte"
+                            {{ old('paper_quality', session('paper_quality')) == 'Matte' ? 'selected' : '' }}> Matte</option>
+
+                        <option value="Premium"
+                            {{ old('paper_quality', session('paper_quality')) == 'Premium' ? 'selected' : '' }}> Premium</option>
                 </select>
             </div>
 
@@ -234,6 +253,23 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const qty = document.querySelector('input[name="quantity"]');
+
+    qty.addEventListener("input", function () {
+        let value = parseInt(this.value);
+
+        if (value > 10000) {
+            this.value = 10000;
+        }
+
+        if (value < 1) {
+            this.value = 1;
+        }
+    });
 });
 </script>
 
