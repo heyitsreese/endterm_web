@@ -89,6 +89,22 @@ dd(session()->all());
     <form method="POST" action="{{ route('order.store') }}">
     @csrf
 
+    @if($errors->any())
+        <div class="bg-red-100 text-red-700 p-4 rounded-lg mt-4">
+            <ul class="list-disc ml-4">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="bg-red-100 text-red-700 p-4 rounded-lg mt-4">
+            {{ session('error') }}
+        </div>
+    @endif
+
         <!-- ORDER SUMMARY -->
 
         <input type="hidden" name="product_id" value="{{ session('product_id') }}">
@@ -298,7 +314,7 @@ dd(session()->all());
 
                 <label for="delivery_pickup" class="option-card delivery-option cursor-pointer border border-gray-200 p-4 rounded-lg transition hover:border-pink-300">
                     <input id="delivery_pickup" type="radio" name="delivery_type" value="pickup" required class="sr-only delivery-type-input"
-                        {{ session('delivery_type') == 'pickup' ? 'checked' : '' }}>
+                        {{ (session('delivery_type', 'pickup')) == 'pickup' ? 'checked' : '' }}>
                     <span class="block font-medium">📦 Pick up Order</span>
                     <span class="text-xs text-gray-500">Claim your order at our store.</span>
                 </label>

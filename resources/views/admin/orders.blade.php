@@ -16,18 +16,34 @@
 </div>
 @endsection
 
-<div class="flex justify-end items-center mb-2">
-            <button class="bg-white border px-4 py-2 rounded-lg text-sm hover:bg-gray-100">
+        <div class="flex justify-end items-center mb-2 gap-2">
+            <button type="button" onclick="toggleOrdersFilter()" class="bg-white border px-4 py-2 rounded-lg text-sm hover:bg-gray-100">
                 <i class="fa-solid fa-filter"></i> Filter
             </button>
 
-            <button class="bg-white border px-4 py-2 rounded-lg text-sm hover:bg-gray-100">
+            <button type="button" onclick="exportOrders()" class="bg-white border px-4 py-2 rounded-lg text-sm hover:bg-gray-100">
                 <i class="fa-solid fa-download"></i> Export
             </button>
 
             <a href="{{ route('admin.orders.create') }}" class="text-white px-4 py-2 rounded-lg text-sm" style="background-color: #D47497;">
                 <i class="fa-solid fa-plus"></i> New Order
             </a>
+        </div>
+
+        <div id="ordersFilterPanel" class="hidden bg-white border rounded-lg p-4 mb-4">
+            <form method="GET" action="{{ url('admin/orders') }}" class="flex flex-wrap gap-2 items-center">
+                <select name="status" class="border rounded px-3 py-2 text-sm">
+                    <option value="">All Statuses</option>
+                    @foreach(['pending','in_progress','ready_for_pickup','out_for_delivery','delivered','picked_up','declined'] as $s)
+                        <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>
+                            {{ ucfirst(str_replace('_', ' ', $s)) }}
+                        </option>
+                    @endforeach
+                </select>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search..." class="border rounded px-3 py-2 text-sm">
+                <button type="submit" class="px-4 py-2 bg-pink-500 text-white rounded-lg text-sm">Apply</button>
+                <a href="{{ url('admin/orders') }}" class="px-4 py-2 border rounded-lg text-sm">Reset</a>
+            </form>
         </div>
 
 @if(request('search'))
@@ -42,21 +58,16 @@
 
 <!-- TABS -->
 <div class="flex flex-wrap gap-2 mb-4 text-sm">
-    <span class="px-3 py-1 text-pink-600 text-xs" style="background-color: #EEF2FF; border: solid #C6D2FF 0.8px; border-radius: 8px">
+    <a href="{{ url('admin/orders') }}" class="px-3 py-1 text-xs transition {{ !request('status') ? 'bg-indigo-100 text-indigo-600 font-medium' : 'bg-white border border-gray-100 hover:bg-gray-50' }}" style="border-radius: 8px">
         All ({{ $totalOrders }})
-    </span>
-    <span class="px-3 py-1 text-xs" style="background-color: #FFFFFF; border: solid #00000010 0.8px; border-radius: 8px">
-        Pending ({{ $pendingOrders }})
-    </span>
-    <span class="px-3 py-1 text-xs" style="background-color: #FFFFFF; border: solid #00000010 0.8px; border-radius: 8px">
-        In Progress ({{ $inProgressOrders }})
-    </span>
-    <span class="px-3 py-1 text-xs" style="background-color: #FFFFFF; border: solid #00000010 0.8px; border-radius: 8px">
-        Completed ({{ $completedOrders->count() }})
-    </span>
-    <span class="px-3 py-1 text-xs" style="background-color: #FFFFFF; border: solid #00000010 0.8px; border-radius: 8px">
-        Declined ({{ $declinedOrdersCount }})
-    </span>
+    </a>
+    @foreach(['pending', 'in_progress', 'ready_for_pickup', 'out_for_delivery', 'delivered', 'picked_up', 'declined'] as $s)
+        <a href="{{ url('admin/orders?status=' . $s) }}" 
+           class="px-3 py-1 text-xs transition {{ request('status') == $s ? 'bg-indigo-100 text-indigo-600 font-medium' : 'bg-white border border-gray-100 hover:bg-gray-50' }}" 
+           style="border-radius: 8px">
+            {{ ucfirst(str_replace('_', ' ', $s)) }}
+        </a>
+    @endforeach
 </div>
 
 <!-- TABLE -->
@@ -183,10 +194,11 @@
                             <div class="flex gap-2">
 
                                 <!-- VIEW -->
-                                <a href="{{ route('admin.orders.show', $order->order_id) }}"
-                                class="px-3 py-2 text-sm bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200">
+                                <button type="button" 
+                                    onclick="openOrderModal('{{ $order->order_id }}')"
+                                    class="px-3 py-2 text-sm bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200">
                                     View
-                                </a>
+                                </button>
 
                                 <!-- EDIT -->
                                 <a href="{{ route('admin.orders.edit', $order->order_id) }}"
@@ -457,10 +469,41 @@ function toggleDropdown(orderId) {
 
     const rect = button.getBoundingClientRect();
 
-    dropdown.style.top = `${rect.bottom + window.scrollY}px`;
-    dropdown.style.left = `${rect.left + window.scrollX}px`;
+    dropdown.style.top = `${rect.bottom}px`;
+    dropdown.style.left = `${rect.left}px`;
 
     dropdown.classList.toggle('hidden');
+}
+
+function toggleOrdersFilter() {
+    document.getElementById('ordersFilterPanel').classList.toggle('hidden');
+}
+
+function exportOrders() {
+    const rows = [['Order ID','Client','Service','Quantity','Status','Delivery','Date','Amount']];
+    document.querySelectorAll('tbody tr[id^="order-row-"]').forEach(tr => {
+        const tds = tr.querySelectorAll('td');
+        if (tds.length >= 8) {
+            rows.push([
+                tds[0]?.innerText.trim(),
+                tds[1]?.innerText.trim(),
+                tds[2]?.innerText.trim(),
+                tds[3]?.innerText.trim(),
+                tds[4]?.innerText.trim().replace(/\s+/g,' '),
+                tds[5]?.innerText.trim(),
+                tds[6]?.innerText.trim(),
+                tds[7]?.innerText.trim(),
+            ]);
+        }
+    });
+    const csv = rows.map(r => r.map(c => `"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `orders-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 </script>
 

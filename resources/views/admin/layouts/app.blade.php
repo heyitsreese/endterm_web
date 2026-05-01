@@ -240,7 +240,16 @@ window.addEventListener('resize', function () {
 </script>
 
 <script>
-    feather.replace()
+    function refreshFeather() {
+        if (typeof feather !== 'undefined') feather.replace();
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', refreshFeather);
+    } else {
+        refreshFeather();
+    }
+    window.addEventListener('load', refreshFeather);
+    window.refreshFeather = refreshFeather;
 </script>
 
 <script>
@@ -444,6 +453,132 @@ function markAsRead(orderId) {
     .then(() => {
         location.reload(); // simple refresh (we can improve later)
     });
+}
+</script>
+
+<!-- ORDER DETAIL MODAL -->
+<div id="orderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[100] p-4 text-left">
+    <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+        <div class="p-6 border-b flex justify-between items-center">
+            <h2 id="modalOrderId" class="text-xl font-bold">Order Details</h2>
+            <button onclick="closeOrderModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1">
+            <div id="modalContent" class="space-y-6">
+                <!-- LOADING -->
+                <div class="flex justify-center py-10">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl text-pink-500"></i>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
+            <a id="modalEditLink" href="#" class="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg text-sm font-medium">Edit Order</a>
+            <button onclick="closeOrderModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openOrderModal(id) {
+    const modal = document.getElementById('orderModal');
+    const content = document.getElementById('modalContent');
+    const title = document.getElementById('modalOrderId');
+    const editLink = document.getElementById('modalEditLink');
+
+    title.innerText = `Order #ORD-${id.toString().padStart(3, '0')}`;
+    editLink.href = `/admin/orders/${id}/edit`;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    content.innerHTML = `<div class="flex justify-center py-10"><i class="fa-solid fa-spinner fa-spin text-3xl text-pink-500"></i></div>`;
+
+    fetch(`/admin/orders/${id}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.json())
+    .then(order => {
+        const detail = order.order_details[0] || {};
+        const product = detail.product || {};
+        
+        let filesHtml = '<p class="text-gray-400 italic">No files uploaded</p>';
+        if (order.file_uploads && order.file_uploads.length > 0) {
+            filesHtml = '<ul class="space-y-2">';
+            order.file_uploads.forEach(f => {
+                filesHtml += `
+                    <li class="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                        <span class="text-xs truncate max-w-[200px]">${f.file_name}</span>
+                        <a href="/storage/${f.file_path}" target="_blank" class="text-[10px] text-blue-500 hover:underline">Download</a>
+                    </li>
+                `;
+            });
+            filesHtml += '</ul>';
+        }
+
+        content.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Customer Info</h3>
+                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                        <p class="text-sm"><strong>Name:</strong> ${order.customer_name}</p>
+                        <p class="text-sm"><strong>Email:</strong> ${order.email}</p>
+                        <p class="text-sm"><strong>Phone:</strong> ${order.phone_number}</p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Order Info</h3>
+                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                        <p class="text-sm"><strong>Status:</strong> <span class="capitalize">${order.status.replace('_', ' ')}</span></p>
+                        <p class="text-sm"><strong>Delivery:</strong> <span class="capitalize">${order.delivery_type}</span></p>
+                        <p class="text-sm"><strong>Date:</strong> ${new Date(order.created_at).toLocaleDateString()}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Printing Details</h3>
+                <div class="bg-white border rounded-xl overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-4 py-2 text-left">Service</th>
+                                <th class="px-4 py-2 text-left">Options</th>
+                                <th class="px-4 py-2 text-right">Qty</th>
+                                <th class="px-4 py-2 text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="px-4 py-3">${product.product_name || 'N/A'}</td>
+                                <td class="px-4 py-3 text-xs text-gray-500">
+                                    Size: ${detail.size}<br>
+                                    Color: ${detail.color}<br>
+                                    Paper: ${detail.paper_quality}
+                                </td>
+                                <td class="px-4 py-3 text-right">${detail.quantity}</td>
+                                <td class="px-4 py-3 text-right font-medium">₱${parseFloat(order.total_amount).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Special Instructions</h3>
+                    <p class="text-sm p-3 bg-yellow-50 rounded-xl border border-yellow-100 italic">${detail.special_instruction || 'No instructions provided.'}</p>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Uploaded Files</h3>
+                    ${filesHtml}
+                </div>
+            </div>
+        `;
+    });
+}
+
+function closeOrderModal() {
+    document.getElementById('orderModal').classList.add('hidden');
+    document.getElementById('orderModal').classList.remove('flex');
 }
 </script>
 

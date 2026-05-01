@@ -28,4 +28,9 @@ class Order extends Model
     {
         return $this->hasMany(OrderDetail::class, 'order_id');
     }
+
+    public function fileUploads()
+    {
+        return $this->hasMany(FileUpload::class, 'order_id', 'order_id');
+    }
 }
