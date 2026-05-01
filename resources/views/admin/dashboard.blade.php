@@ -201,9 +201,9 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    const labels = @json($dailySalesChart->pluck('label'));
-    const sales = @json($dailySalesChart->pluck('total_sales'));
-    const orders = @json($dailySalesChart->pluck('order_count'));
+    const labels = @json($dailySalesChart->pluck('label')->toArray());
+    const sales = @json($dailySalesChart->pluck('total_sales')->toArray());
+    const orders = @json($dailySalesChart->pluck('order_count')->toArray());
 
     Chart.defaults.font.family = 'inherit';
 

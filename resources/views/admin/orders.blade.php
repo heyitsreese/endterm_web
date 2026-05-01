@@ -16,19 +16,58 @@
 </div>
 @endsection
 
-        <div class="flex justify-end items-center mb-2 gap-2">
-            <button type="button" onclick="toggleOrdersFilter()" class="bg-white border px-4 py-2 rounded-lg text-sm hover:bg-gray-100">
-                <i class="fa-solid fa-filter"></i> Filter
-            </button>
+<div class="flex justify-end items-center gap-3 mb-2">
 
-            <button type="button" onclick="exportOrders()" class="bg-white border px-4 py-2 rounded-lg text-sm hover:bg-gray-100">
-                <i class="fa-solid fa-download"></i> Export
-            </button>
+    <!-- FILTER -->
+    <form method="GET" action="{{ route('admin.orders.index') }}">
+        <select name="status"
+            onchange="this.form.submit()"
+            class="border border-gray-200 rounded-xl px-4 py-2 bg-white">
 
-            <a href="{{ route('admin.orders.create') }}" class="text-white px-4 py-2 rounded-lg text-sm" style="background-color: #D47497;">
-                <i class="fa-solid fa-plus"></i> New Order
-            </a>
-        </div>
+            <option value="all">All</option>
+m
+            <option value="pending"
+                {{ request('status') == 'pending' ? 'selected' : '' }}>
+                Pending
+            </option>
+
+            <option value="in_progress"
+                {{ request('status') == 'in_progress' ? 'selected' : '' }}>
+                In Progress
+            </option>
+
+            <option value="picked_up"
+                {{ request('status') == 'picked_up' ? 'selected' : '' }}>
+                Picked Up
+            </option>
+
+            <option value="delivered"
+                {{ request('status') == 'delivered' ? 'selected' : '' }}>
+                Delivered
+            </option>
+
+            <option value="declined"
+                {{ request('status') == 'declined' ? 'selected' : '' }}>
+                Declined
+            </option>
+
+        </select>
+    </form>
+
+    <!-- EXPORT -->
+    <a href="{{ route('admin.orders.export') }}"
+        class="px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50">
+        <i class="fa-solid fa-download"></i> Export
+    </a>
+
+    <!-- NEW ORDER -->
+    <a href="{{ route('admin.orders.create') }}"
+        class="text-white px-4 py-2 rounded-lg text-sm"
+        style="background-color: #D47497;">
+        <i class="fa-solid fa-plus"></i> New Order
+    </a>
+
+</div>
 
         <div id="ordersFilterPanel" class="hidden bg-white border rounded-lg p-4 mb-4">
             <form method="GET" action="{{ url('admin/orders') }}" class="flex flex-wrap gap-2 items-center">
@@ -55,20 +94,6 @@
 <h2 class="text-lg font-semibold mt-10 mb-4">
     Current Orders
 </h2>
-
-<!-- TABS -->
-<div class="flex flex-wrap gap-2 mb-4 text-sm">
-    <a href="{{ url('admin/orders') }}" class="px-3 py-1 text-xs transition {{ !request('status') ? 'bg-indigo-100 text-indigo-600 font-medium' : 'bg-white border border-gray-100 hover:bg-gray-50' }}" style="border-radius: 8px">
-        All ({{ $totalOrders }})
-    </a>
-    @foreach(['pending', 'in_progress', 'ready_for_pickup', 'out_for_delivery', 'delivered', 'picked_up', 'declined'] as $s)
-        <a href="{{ url('admin/orders?status=' . $s) }}" 
-           class="px-3 py-1 text-xs transition {{ request('status') == $s ? 'bg-indigo-100 text-indigo-600 font-medium' : 'bg-white border border-gray-100 hover:bg-gray-50' }}" 
-           style="border-radius: 8px">
-            {{ ucfirst(str_replace('_', ' ', $s)) }}
-        </a>
-    @endforeach
-</div>
 
 <!-- TABLE -->
 <div class="bg-white rounded-2xl shadow p-4" style="border:solid #00000010; border-radius: 14px; border-width: 0.8px;">
