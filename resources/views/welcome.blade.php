@@ -162,9 +162,9 @@
     <p class="mt-2 text-2xl">Order now without signing up, or create an account for easier tracking and business features</p>
 
     <div class="mt-6 flex justify-center gap-4">
-        <button class="bg-white px-6 py-2 rounded-lg" style="color:#D47497; font-weight: 500">
+        <a href="{{ url('/order') }}" class="bg-white px-6 py-2 rounded-lg" style="color:#D47497; font-weight: 500">
             <i class="fa-solid fa-cart-shopping"></i> Quick Order
-        </button>
+        </a>
     </div>
 </section>
 @endsection

@@ -60,7 +60,7 @@
     </p>
 
     <!-- ✅ FORM START -->
-    <form method="POST" action="{{ route('order.step4') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('order.step3.store') }}" enctype="multipart/form-data">
         @csrf
 
         <!-- CARD -->
@@ -90,7 +90,11 @@
                 </p>
 
                 <!-- ✅ IMPORTANT: name added -->
-                <input type="file" id="fileElem" name="files[]" multiple class="hidden">
+                <input type="file"
+                    id="fileElem"
+                    name="files[]"
+                    accept=".pdf,.jpg,.jpeg,.png,.psd"
+                    class="hidden">
 
                 <button type="button"
                         class="mt-4 px-4 py-2 border rounded-lg bg-white">
@@ -98,7 +102,7 @@
                 </button>
 
                 <p class="text-xs text-gray-400 mt-4">
-                    Supported: PDF, JPG, PNG • Max size: 50MB
+                    Supported: PDF, JPG, PNG, PSD • Max size: 50MB
                 </p>
             </div>
 
@@ -106,15 +110,37 @@
             <div class="mt-6">
                 <h3 class="font-medium mb-3">Uploaded Files</h3>
                 <div id="file-list" class="space-y-3">
-                    @if(session('files'))
-                        @foreach(session('files') as $file)
-                            <div class="flex justify-between items-center bg-gray-100 px-4 py-2 rounded-lg">
-                                <span class="text-sm">{{ is_array($file) ? $file['name'] : basename($file) }}</span>
-                                <span class="text-xs text-gray-500">Uploaded</span>
-                            </div>
-                        @endforeach
-                    @endif
-                </div>
+
+    @if(session('files') && count(session('files')) > 0)
+
+        @foreach(session('files') as $file)
+
+            <div class="flex justify-between items-center bg-gray-100 px-4 py-2 rounded-lg">
+
+                <span class="text-sm">
+                    {{ $file['name'] }}
+                </span>
+
+                <!-- DELETE BUTTON -->
+                <button type="button"
+                        onclick="deleteSessionFile({{ $loop->index }})"
+                        class="text-red-500 text-sm">
+                    Delete
+                </button>
+
+            </div>
+
+        @endforeach
+
+    @else
+
+        <p class="text-sm text-gray-400">
+            No uploaded files yet.
+        </p>
+
+    @endif
+
+</div>
             </div>
 
             <!-- TIPS -->
@@ -138,10 +164,11 @@
 
             <!-- ✅ NOW SUBMITS -->
             <button type="submit"
-                    class="text-white px-6 py-3 rounded-lg shadow"
-                    style="background-color: #D47497;">
-                Continue →
-            </button>
+                id="continueBtn"
+                class="text-white px-6 py-3 rounded-lg shadow opacity-50 cursor-not-allowed"
+                style="background-color: #D47497;"
+                disabled>
+            Continue →
         </div>
 
     </form>
@@ -157,34 +184,101 @@ document.addEventListener("DOMContentLoaded", function () {
     const fileInput = document.getElementById("fileElem");
     const fileList = document.getElementById("file-list");
     const dropArea = document.getElementById("drop-area");
-    const button = dropArea.querySelector("button");
+    const form = fileInput.closest("form");
 
-    // ✅ FIX: prevent double trigger
+    let selectedFiles = [];
+
+    // OPEN FILE PICKER
     dropArea.addEventListener("click", function (e) {
-        // only trigger if NOT clicking button
         if (e.target.tagName !== "BUTTON") {
             fileInput.click();
         }
     });
 
+    // SELECT FILES
     fileInput.addEventListener("change", function () {
-        displayFiles(this.files);
+
+        const files = Array.from(this.files);
+
+        files.forEach(file => selectedFiles.push(file));
+
+        renderFileList();
+
+        fileInput.value = "";
     });
 
-    function displayFiles(files) {
+    function renderFileList() {
 
-        Array.from(files).forEach(file => {
+        fileList.innerHTML = "";
+        const continueBtn = document.getElementById("continueBtn");
+
+        if (selectedFiles.length === 0) {
+            fileList.innerHTML = `<p class="text-sm text-gray-400">No files selected yet.</p>`;
+
+            continueBtn.disabled = true;
+            continueBtn.classList.add("opacity-50", "cursor-not-allowed");
+
+            return;
+        }
+
+        selectedFiles.forEach((file, index) => {
+
             const div = document.createElement("div");
             div.className = "flex justify-between items-center bg-gray-100 px-4 py-2 rounded-lg";
 
             div.innerHTML = `
-                <span class="text-sm">${file.name}</span>
-                <span class="text-xs text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                <div>
+                    <span class="text-sm">${file.name}</span>
+                    <span class="text-xs text-gray-500 ml-2">
+                        ${(file.size / 1024 / 1024).toFixed(2)} MB
+                    </span>
+                </div>
+
+                <button type="button"
+                        class="text-red-500 text-sm"
+                        onclick="removeFile(${index})">
+                    Delete
+                </button>
             `;
 
-            fileList.appendChild(div); // ✅ append, NOT replace
+            fileList.appendChild(div);
         });
+        
+        continueBtn.disabled = false;
+        continueBtn.classList.remove("opacity-50", "cursor-not-allowed");
     }
+
+    window.removeFile = function(index) {
+        selectedFiles.splice(index, 1);
+        renderFileList();
+    };
+
+    // DELETE FROM SESSION (FIXED FUNCTION)
+    window.deleteSessionFile = function(index) {
+
+        fetch("{{ route('order.file.delete') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({ index })
+        })
+        .then(res => res.json())
+        .then(() => location.reload());
+    };
+
+    // SUBMIT FIX
+    form.addEventListener("submit", function () {
+
+        const dataTransfer = new DataTransfer();
+
+        selectedFiles.forEach(file => {
+            dataTransfer.items.add(file);
+        });
+
+        fileInput.files = dataTransfer.files;
+    });
 
 });
 </script>
