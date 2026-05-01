@@ -5,6 +5,7 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\User;
 use App\Models\Product;
+use App\Models\FileUpload;
 use App\Services\PriceService;
 use Carbon\Carbon;
 
@@ -93,8 +94,15 @@ class AdminController extends Controller
 
         $admin = User::where('user_id', session('user_id'))->first();
 
+        $status = $request->input('status');
+
         $orders = Order::with(['orderDetails.product'])
-            ->whereNotIn('status', ['declined', 'delivered', 'picked_up'])
+            ->when($status, function($q) use ($status) {
+                $q->where('status', $status);
+            })
+            ->when(!$status, function($q) {
+                $q->whereNotIn('status', ['declined', 'delivered', 'picked_up']);
+            })
             ->when($search, function ($q) use ($search, $id) {
                 $q->where(function ($q2) use ($search, $id) {
                     if ($id) {
@@ -200,17 +208,31 @@ class AdminController extends Controller
         }
 
         $order->save();
-
         return response()->json(['success' => true]);
-        dd($request->all());
     }
 
-    public function show($id)
+    public function show($id, Request $request)
     {
-        $order = \App\Models\Order::with('orderDetails.product')
+        $order = Order::with(['orderDetails.product', 'fileUploads'])
                     ->findOrFail($id);
 
-        return view('admin.orders.show', compact('order'));
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json($order);
+        }
+
+        $admin = User::where('user_id', session('user_id'))->first();
+        $pendingOrders = Order::where('status', 'pending')->count();
+        $unreadOrdersCount = Order::where('status', 'pending')
+            ->where('is_read', false)
+            ->count();
+        $pendingNotifications = Order::with(['orderDetails.product'])
+            ->where('status', 'pending')
+            ->where('is_read', false)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('admin.orders.show', compact('order', 'admin', 'pendingOrders', 'unreadOrdersCount', 'pendingNotifications'));
     }
 
     public function edit($id)
@@ -218,7 +240,19 @@ class AdminController extends Controller
         $order = \App\Models\Order::with('orderDetails.product')
                     ->findOrFail($id);
 
-        return view('admin.orders.edit', compact('order'));
+        $admin = User::where('user_id', session('user_id'))->first();
+        $pendingOrders = Order::where('status', 'pending')->count();
+        $unreadOrdersCount = Order::where('status', 'pending')
+            ->where('is_read', false)
+            ->count();
+        $pendingNotifications = Order::with(['orderDetails.product'])
+            ->where('status', 'pending')
+            ->where('is_read', false)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('admin.orders.edit', compact('order', 'admin', 'pendingOrders', 'unreadOrdersCount', 'pendingNotifications'));
     }
 
     public function destroy($id)
@@ -566,6 +600,16 @@ class AdminController extends Controller
             'special_instruction' => $request->instructions
         ]);
 
+        // 📂 SAVE ALL FILES
+        foreach ($paths as $path) {
+            FileUpload::create([
+                'order_id' => $order->order_id,
+                'file_name' => $path['name'],
+                'file_path' => $path['path'],
+                'upload_date' => now(),
+            ]);
+        }
+
         return redirect()->route('admin.orders.index')
             ->with('success', 'Order created successfully!');
     }
@@ -594,6 +638,18 @@ class AdminController extends Controller
         $totalClients = User::where('role', 'client')->count()
                     + Order::whereNull('user_id')->distinct('email')->count('email');
 
+        $admin = User::where('user_id', session('user_id'))->first();
+        $pendingOrders = Order::where('status', 'pending')->count();
+        $unreadOrdersCount = Order::where('status', 'pending')
+            ->where('is_read', false)
+            ->count();
+        $pendingNotifications = Order::with(['orderDetails.product'])
+            ->where('status', 'pending')
+            ->where('is_read', false)
+            ->latest()
+            ->take(5)
+            ->get();
+
         return view('admin.clients', [
             'registeredClients' => $registeredClients,
             'walkinClients'     => $walkinClients,
@@ -604,6 +660,10 @@ class AdminController extends Controller
                                     ->where('created_at', '>=', now()->startOfMonth())
                                     ->count(),
             'avgOrderValue'     => Order::avg('total_amount') ?? 0,
+            'admin'             => $admin,
+            'pendingOrders'     => $pendingOrders,
+            'unreadOrdersCount' => $unreadOrdersCount,
+            'pendingNotifications' => $pendingNotifications,
         ]);
     }
 }

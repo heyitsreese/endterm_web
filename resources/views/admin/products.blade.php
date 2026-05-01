@@ -171,12 +171,12 @@
                     <i class="fa-solid fa-eye"></i> View
                 </button>
 
-                <button 
+                <button
                     type="button"
                     data-id="{{ $product->product_id }}"
-                    onclick="openDeleteModal(this)"
+                    onclick="openProductDeleteModal(this)"
                     class="flex-1 text-center py-2 border rounded-lg text-sm hover:bg-red-100 text-red-500 flex items-center justify-center gap-1">
-                    
+
                     <i class="fa-solid fa-trash"></i> Delete
                 </button>
             </div>
@@ -319,7 +319,7 @@
             @method('DELETE')
 
             <div class="flex gap-3">
-                <button type="button" onclick="closeDeleteModal()"
+                <button type="button" onclick="closeProductDeleteModal()"
                     class="flex-1 py-2 border rounded-lg hover:bg-gray-100">
                     Cancel
                 </button>
