@@ -72,14 +72,19 @@
         <div class="p-4 border-t flex items-center justify-between">
 
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-pink-400 text-white flex items-center justify-center font-bold">
-                    {{ strtoupper(substr($admin->name ?? 'A', 0, 2)) }}
-                </div>
+                <div class="w-10 h-10 rounded-full bg-pink-400 flex items-center justify-center text-white font-semibold">
+     {{ strtoupper(substr(session('user_name', 'Admin'), 0, 1) . substr(strrchr(session('user_name', 'Admin'), ' '), 1, 1)) }}
+        </div>
 
-                <div>
-                    <p class="text-sm font-medium">{{ $admin->name ?? 'Admin' }}</p>
-                    <p class="text-xs text-gray-500">{{ $admin->email ?? '' }}</p>
-                </div>
+                    <div>
+            <p class="font-semibold">
+                {{ session('user_name', 'Admin') }}
+            </p>
+
+            <p class="text-sm text-gray-500">
+                {{ session('user_email', 'admin@email.com') }}
+            </p>
+        </div>
             </div>
 
             <button type="button" onclick="openLogoutModal()" class="text-gray-500 hover:text-red-500 transition">
@@ -446,6 +451,6 @@ function markAsRead(orderId) {
     });
 }
 </script>
-
+@stack('scripts')
 </body>
 </html>

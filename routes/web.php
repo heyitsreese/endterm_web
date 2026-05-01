@@ -85,7 +85,25 @@ Route::middleware('admin.session')->prefix('admin')->name('admin.')->group(funct
     
     Route::get('/clients', [AdminController::class, 'clients'])
         ->name('clients');
-    
+
+    Route::get('/clients/filter', [AdminController::class, 'filterClients'])
+        ->name('clients.filter');
+
+    Route::get('/clients/export', [AdminController::class, 'exportClients'])
+        ->name('clients.export');
+
+    Route::get('/clients/{id}', [AdminController::class, 'showClient'])
+        ->name('clients.show');
+
+    Route::get('/clients/{id}/edit', [AdminController::class, 'editClient'])
+        ->name('clients.edit');
+
+    Route::put('/clients/{id}', [AdminController::class, 'updateClient'])
+        ->name('clients.update');
+
+    Route::delete('/clients/{id}', [AdminController::class, 'deleteClient'])
+        ->name('clients.destroy');
+        
     Route::get('/products', [AdminController::class, 'products'])
         ->name('products');
     
@@ -100,6 +118,9 @@ Route::middleware('admin.session')->prefix('admin')->name('admin.')->group(funct
 
     Route::get('/orders', [AdminController::class, 'index'])
         ->name('orders.index');
+
+    Route::get('/orders/export', [AdminController::class, 'exportOrders'])
+        ->name('orders.export');
 
     Route::get('/orders/create', [AdminController::class, 'create'])
         ->name('orders.create');
@@ -125,8 +146,14 @@ Route::middleware('admin.session')->prefix('admin')->name('admin.')->group(funct
     Route::post('/orders/{id}/read', [AdminController::class, 'markAsRead'])
         ->name('orders.read');
 
+    Route::get('/orders/export', [AdminController::class, 'exportOrders'])
+        ->name('orders.export');
+    
+    Route::get('/admin/clients/export', [AdminController::class, 'export'])
+        ->name('admin.clients.export');
+
     Route::get('/settings', [AdminController::class, 'settings'])
-        ->name('admin.settings');
+        ->name('settings');
 
     Route::post('/settings/update', [AdminController::class, 'updateSettings'])
         ->name('settings.update');
