@@ -2,6 +2,20 @@
 
 @section('content')
 
+<!-- HEADER -->
+
+@section('header')
+<div class="flex items-center gap-2 min-w-0">
+    <button onclick="toggleSidebar()" class="md:hidden text-gray-600 shrink-0">
+        <i data-feather="menu"></i>
+    </button>
+    <div class="min-w-0">
+        <h1 class="text-lg sm:text-2xl font-semibold truncate">Clients</h1>
+        <p class="text-xs text-gray-500 hidden sm:block">View all your clients here.</p>
+    </div>
+</div>
+@endsection
+
 <div class="p-6">
 
     <h1 class="text-2xl font-semibold mb-1">Clients</h1>
@@ -44,44 +58,44 @@
         </form>
 
         <div class="relative">
-    <!-- EXPORT BUTTON -->
-    <button onclick="toggleExportMenu()" 
-        class="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm hover:bg-gray-100">
+            <!-- EXPORT BUTTON -->
+            <button onclick="toggleExportMenu()" 
+                class="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm hover:bg-gray-100">
 
-        <!-- ICON -->
-        <svg xmlns="http://www.w3.org/2000/svg" 
-             class="w-4 h-4" 
-             fill="none" 
-             stroke="currentColor" 
-             stroke-width="2"
-             viewBox="0 0 24 24">
-            <path d="M12 16v-8m0 0l-3 3m3-3l3 3M4 20h16"/>
-        </svg>
+                <!-- ICON -->
+                <svg xmlns="http://www.w3.org/2000/svg" 
+                    class="w-4 h-4" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="2"
+                    viewBox="0 0 24 24">
+                    <path d="M12 16v-8m0 0l-3 3m3-3l3 3M4 20h16"/>
+                </svg>
 
-        Export
-    </button>
+                Export
+            </button>
 
-    <!-- DROPDOWN MENU -->
-    <div id="exportMenu" 
-         class="hidden absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-md z-50">
+            <!-- DROPDOWN MENU -->
+            <div id="exportMenu" 
+                class="hidden absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-md z-50">
 
-        <a href="{{ route('admin.clients.export', ['type' => 'all']) }}" 
-           class="block px-4 py-2 hover:bg-gray-100">
-           Export All
-        </a>
+                <a href="{{ route('admin.clients.export', ['type' => 'all']) }}" 
+                class="block px-4 py-2 hover:bg-gray-100">
+                Export All
+                </a>
 
-        <a href="{{ route('admin.clients.export', ['type' => 'registered']) }}" 
-           class="block px-4 py-2 hover:bg-gray-100">
-           Registered Only
-        </a>
+                <a href="{{ route('admin.clients.export', ['type' => 'registered']) }}" 
+                class="block px-4 py-2 hover:bg-gray-100">
+                Registered Only
+                </a>
 
-        <a href="{{ route('admin.clients.export', ['type' => 'walkin']) }}" 
-           class="block px-4 py-2 hover:bg-gray-100">
-           Walk-in Only
-        </a>
+                <a href="{{ route('admin.clients.export', ['type' => 'walkin']) }}" 
+                class="block px-4 py-2 hover:bg-gray-100">
+                Walk-in Only
+                </a>
 
-    </div>
-</div>
+            </div>
+        </div>
     </div>
 
     <!-- ===================== -->
@@ -90,7 +104,7 @@
      @if(!request('type') || request('type') == 'registered')
     <h2 class="text-blue-600 text-xl font-semibold mb-3">Registered Clients</h2>
 
-    <div class="bg-white border rounded-xl overflow-hidden mb-8">
+    <div class="bg-white border rounded-xl overflow-visible mb-8">
         <table class="w-full text-sm">
             <thead class="bg-gray-50 text-gray-600">
                 <tr>
@@ -105,32 +119,61 @@
 
             <tbody>
                 @foreach($registeredClients as $client)
-                <tr class="border-t">
 
-                   <td class="px-4 py-3 font-medium">
+                <tr class="border-t">
+                    <td class="px-4 py-3 font-medium">
                         {{ $client->name }}
                     </td>
 
                     <td class="px-4 py-3">{{ $client->email }}</td>
                     <td class="px-4 py-3">{{ $client->orders_count }}</td>
-                    <td class="px-4 py-3">₱ {{ number_format($client->orders_sum_total_amount ?? 0, 2) }}</td>
+                    <td class="px-4 py-3">
+                        ₱ {{ number_format($client->orders_sum_total_amount ?? 0, 2) }}
+                    </td>
                     <td class="px-4 py-3">{{ $client->created_at }}</td>
 
-                    <!-- DROPDOWN -->
-                    <td class="px-4 py-3 text-right relative">
-    <button onclick="toggleDropdown('dropdown-reg-{{ $loop->index }}')"
-        class="p-2 rounded hover:bg-gray-100">
-        ⋮
-    </button>
+                    <td class="px-4 py-3 text-right">
+                        <button
+                            onclick="toggleRow('reg-row-{{ $loop->index }}')"
+                            class="p-2 rounded hover:bg-gray-100">
+                            ⋮
+                        </button>
+                    </td>
+                </tr>
 
-    <div id="dropdown-reg-{{ $loop->index }}"
-        class="hidden absolute right-0 mt-2 w-32 bg-white border rounded shadow-lg z-50">
+                <!-- EXPAND ACTIONS -->
+                <tr id="reg-row-{{ $loop->index }}" class="hidden bg-gray-50">
+                    <td colspan="6" class="px-6 py-4">
+                        <div class="flex justify-end gap-3">
 
-        <a href="#" class="block px-4 py-2 hover:bg-gray-100">View</a>
-        <a href="#" class="block px-4 py-2 hover:bg-gray-100">Edit</a>
-        <a href="#" class="block px-4 py-2 text-red-500 hover:bg-gray-100">Delete</a>
-    </div>
-</td>
+                            <!-- VIEW -->
+                            <a href="{{ route('admin.clients.show', $client->user_id) }}"
+                                class="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg">
+                                View
+                            </a>
+
+                            <!-- EDIT -->
+                            <a href="{{ route('admin.clients.edit', $client->user_id) }}"
+                                class="px-4 py-2 bg-yellow-100 text-yellow-600 rounded-lg">
+                                Edit
+                            </a>
+
+                            <!-- DELETE -->
+                            <form method="POST"
+                                action="{{ route('admin.clients.destroy', $client->user_id) }}">
+                                @csrf
+                                @method('DELETE')
+
+                                <button
+                                    class="px-4 py-2 bg-red-100 text-red-600 rounded-lg">
+                                    Delete
+                                </button>
+                            </form>
+
+                        </div>
+                    </td>
+                </tr>
+
                 @endforeach
             </tbody>
         </table>

@@ -96,21 +96,27 @@ class AdminController extends Controller
 
         $admin = User::where('user_id', session('user_id'))->first();
 
-$orders = Order::with(['orderDetails.product'])
-    ->when($status && $status != 'all', function ($q) use ($status) {
-        $q->where('status', $status);
-    })
-    ->when($search, function ($q) use ($search, $id) {
-        $q->where(function ($q2) use ($search, $id) {
-            if ($id) {
-                $q2->where('order_id', $id);
-            }
+        $orders = Order::with(['orderDetails.product'])
+            ->whereNotIn('status', [
+                'declined',
+                'delivered',
+                'picked_up'
+            ])
+            ->when($status && $status != 'all', function ($q) use ($status) {
+                $q->where('status', $status);
+            })
+            ->when($search, function ($q) use ($search, $id) {
+                $q->where(function ($q2) use ($search, $id) {
+                    if ($id) {
+                        $q2->where('order_id', $id);
+                    }
 
-            $q2->orWhere('customer_name', 'like', "%{$search}%");
-        });
-    })
-    ->latest()
-    ->get();
+                    $q2->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->get();
 
         $declinedOrders = Order::with(['orderDetails.product'])
             ->where('status', 'declined')
@@ -611,203 +617,303 @@ $orders = Order::with(['orderDetails.product'])
             ->with('success', 'Order created successfully!');
     }
 
-public function clients(Request $request)
-{
-    $type = $request->get('type');
+    public function clients(Request $request)
+    {
+        $type = $request->get('type');
 
-    // ======================
-    // REGISTERED CLIENTS
-    // ======================
-    $registeredClients = User::where('role', 'client') // make sure lowercase matches DB
-        ->withCount('orders')
-        ->withSum('orders', 'total_amount')
-        ->orderBy('created_at', 'desc')
-        ->get();
+        // ======================
+        // REGISTERED CLIENTS
+        // ======================
+        $registeredClients = User::where('role', 'client')
+            ->withCount('orders')
+            ->withSum('orders', 'total_amount')
+            ->with(['orders' => function ($query) {
+                $query->latest();
+            }])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($client) {
+                $client->latest_order_id = optional($client->orders->first())->order_id;
+                return $client;
+            });
 
-    // ======================
-    // WALK-IN CLIENTS
-    // ======================
-$walkInClients = Order::selectRaw('
-    customer_name,
-    email,
-    phone_number,
-    COUNT(*) as orders_count,
-    COALESCE(SUM(total_amount), 0) as total_spent,
-    MAX(created_at) as last_order,
-    MAX(order_id) as latest_order_id
-')
-->whereNull('user_id')
-->groupBy('customer_name', 'email', 'phone_number')
-->orderByDesc('last_order')
-->get();
+        // ======================
+        // WALK-IN CLIENTS
+        // ======================
+    $walkInClients = Order::selectRaw('
+        customer_name,
+        email,
+        phone_number,
+        COUNT(*) as orders_count,
+        COALESCE(SUM(total_amount), 0) as total_spent,
+        MAX(created_at) as last_order,
+        MAX(order_id) as latest_order_id
+    ')
+    ->whereNull('user_id')
+    ->groupBy('customer_name', 'email', 'phone_number')
+    ->orderByDesc('last_order')
+    ->get();
 
-    // ======================
-    // 🔥 FIXED STATS
-    // ======================
+        // ======================
+        // 🔥 FIXED STATS
+        // ======================
 
-    // TOTAL CLIENTS
-    $totalClients = $registeredClients->count() + $walkInClients->count();
+        // TOTAL CLIENTS
+        $totalClients = $registeredClients->count() + $walkInClients->count();
 
-    // ACTIVE THIS MONTH (clients who made orders this month)
-    $activeClients = Order::whereMonth('created_at', now()->month)
-        ->whereYear('created_at', now()->year)
-        ->distinct('email')
-        ->count('email');
+        // ACTIVE THIS MONTH (clients who made orders this month)
+        $activeClients = Order::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->distinct('email')
+            ->count('email');
 
-    // NEW CLIENTS THIS MONTH (registered only)
-    $newClients = User::where('role', 'client')
-        ->whereMonth('created_at', now()->month)
-        ->whereYear('created_at', now()->year)
-        ->count();
+        // NEW CLIENTS THIS MONTH (registered only)
+        $newClients = User::where('role', 'client')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
 
-    // AVG ORDER VALUE
-    $avgOrderValue = Order::avg('total_amount') ?? 0;
+        // AVG ORDER VALUE
+        $avgOrderValue = Order::avg('total_amount') ?? 0;
 
-    return view('admin.clients', compact(
-        'registeredClients',
-        'walkInClients',
-        'totalClients',
-        'activeClients',
-        'newClients',
-        'avgOrderValue'
-    ));
-}
-    public function showClient($id)
-{
-    $client = User::where('user_id', $id)
-        ->where('role', 'client')
-        ->firstOrFail();
+        return view('admin.clients', compact(
+            'registeredClients',
+            'walkInClients',
+            'totalClients',
+            'activeClients',
+            'newClients',
+            'avgOrderValue'
+        ));
+    }
+        public function showClient($id)
+    {
+        $client = User::where('user_id', $id)
+            ->where('role', 'client')
+            ->firstOrFail();
 
-    return view('admin.client-view', compact('client'));
-}
-
-public function editClient($id)
-{
-    $client = User::where('user_id', $id)
-        ->where('role', 'client')
-        ->firstOrFail();
-
-    return view('admin.client-edit', compact('client'));
-}
-
-public function deleteClient($id)
-{
-    $client = User::where('user_id', $id)
-        ->where('role', 'client')
-        ->firstOrFail();
-
-    $client->delete();
-
-    return redirect()->route('admin.clients')
-        ->with('success', 'Client deleted successfully.');
-}
-
-public function updateClient(Request $request, $id)
-{
-    $client = User::where('user_id', $id)
-        ->where('role', 'client')
-        ->firstOrFail();
-
-    $client->update([
-        'name' => $request->name,
-        'email' => $request->email,
-        'phone' => $request->phone,
-    ]);
-
-    return redirect()->route('admin.clients')
-        ->with('success', 'Client updated successfully.');
-}
-public function export(Request $request)
-{
-    $type = $request->type;
-
-    if ($type == 'registered') {
-        $clients = Client::where('type', 'registered')->get();
-    } 
-    elseif ($type == 'walkin') {
-        $clients = Client::where('type', 'walkin')->get();
-    } 
-    else {
-        $clients = Client::all();
+        return view('admin.clients.view', compact('client'));
     }
 
-    $filename = "clients_export.csv";
+    public function editClient($id)
+    {
+        $client = User::where('user_id', $id)
+            ->where('role', 'client')
+            ->firstOrFail();
 
-    $headers = [
-        "Content-Type" => "text/csv",
-        "Content-Disposition" => "attachment; filename=$filename",
-    ];
+        return view('admin.clients.edit', compact('client'));
+    }
 
-    $callback = function() use ($clients) {
-        $file = fopen('php://output', 'w');
+    public function deleteClient($id)
+    {
+        $client = User::where('user_id', $id)
+            ->where('role', 'client')
+            ->firstOrFail();
 
-        fputcsv($file, ['Name', 'Email', 'Orders', 'Total Spent']);
+        $client->delete();
 
-        foreach ($clients as $client) {
-            fputcsv($file, [
-                $client->name,
-                $client->email,
-                $client->orders_count,
-                $client->total_spent
-            ]);
-        }
+        return redirect()->route('admin.clients')
+            ->with('success', 'Client deleted successfully.');
+    }
 
-        fclose($file);
-    };
+    public function updateClient(Request $request, $id)
+    {
+        $client = User::where('user_id', $id)
+            ->where('role', 'client')
+            ->firstOrFail();
 
-    return response()->stream($callback, 200, $headers);
-}
-public function exportClients()
-{
-    $clients = User::where('role', 'client')->get();
-
-    $filename = 'clients.csv';
-
-    $headers = [
-        "Content-type" => "text/csv",
-        "Content-Disposition" => "attachment; filename=$filename",
-        "Pragma" => "no-cache",
-        "Cache-Control" => "must-revalidate",
-        "Expires" => "0"
-    ];
-
-    $callback = function () use ($clients) {
-        $file = fopen('php://output', 'w');
-
-        fputcsv($file, [
-            'Client Name',
-            'Email',
-            'Phone',
-            'Join Date'
+        $client->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
         ]);
 
-        foreach ($clients as $client) {
-            fputcsv($file, [
-                $client->name,
-                $client->email,
-                $client->phone ?? '',
-                $client->created_at
-            ]);
+        return redirect()->route('admin.clients')
+            ->with('success', 'Client updated successfully.');
+    }
+    public function export(Request $request)
+    {
+        $type = $request->type;
+
+        if ($type == 'registered') {
+            $clients = Client::where('type', 'registered')->get();
+        } 
+        elseif ($type == 'walkin') {
+            $clients = Client::where('type', 'walkin')->get();
+        } 
+        else {
+            $clients = Client::all();
         }
 
-        fclose($file);
-    };
+        $filename = "clients_export.csv";
 
-    return response()->stream($callback, 200, $headers);
-}
-public function filterClients(Request $request)
-{
-    $type = $request->input('type');
+        $headers = [
+            "Content-Type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+        ];
 
-    $clients = User::where('role', 'client')
-        ->when($type == 'walkin', function ($q) {
-            $q->whereNull('email');
-        })
-        ->when($type == 'registered', function ($q) {
-            $q->whereNotNull('email');
-        })
-        ->get();
+        $callback = function() use ($clients) {
+            $file = fopen('php://output', 'w');
 
-    return view('admin.clients', compact('clients'));
-}
+            fputcsv($file, ['Name', 'Email', 'Orders', 'Total Spent']);
+
+            foreach ($clients as $client) {
+                fputcsv($file, [
+                    $client->name,
+                    $client->email,
+                    $client->orders_count,
+                    $client->total_spent
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+    public function exportOrders()
+    {
+        $orders = Order::all();
+
+        $filename = 'orders.csv';
+
+        $headers = [
+            "Content-Type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate",
+            "Expires" => "0",
+        ];
+
+        $callback = function () use ($orders) {
+            $file = fopen('php://output', 'w');
+
+            fputcsv($file, [
+                'Order ID',
+                'Customer Name',
+                'Email',
+                'Phone',
+                'Status',
+                'Total Amount',
+                'Order Date'
+            ]);
+
+            foreach ($orders as $order) {
+                fputcsv($file, [
+                    $order->order_id,
+                    $order->customer_name,
+                    $order->email,
+                    $order->phone_number,
+                    $order->status,
+                    $order->total_amount,
+                    $order->created_at
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function filterClients(Request $request)
+    {
+        $type = $request->input('type');
+
+        $clients = User::where('role', 'client')
+            ->when($type == 'walkin', function ($q) {
+                $q->whereNull('email');
+            })
+            ->when($type == 'registered', function ($q) {
+                $q->whereNotNull('email');
+            })
+            ->get();
+
+        return view('admin.clients', compact('clients'));
+    }
+
+    public function exportClients(Request $request)
+    {
+        $type = $request->type ?? 'all';
+
+        $filename = "clients_export_" . $type . "_" . now()->format('Ymd_His') . ".csv";
+
+        $headers = [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0",
+        ];
+
+        $callback = function () use ($type) {
+            $file = fopen('php://output', 'w');
+
+            // CSV Header
+            fputcsv($file, [
+                'Client Name',
+                'Email',
+                'Phone',
+                'Total Orders',
+                'Total Spent',
+                'Date'
+            ]);
+
+            /*
+            ========================
+            REGISTERED CLIENTS
+            ========================
+            */
+            if ($type === 'all' || $type === 'registered') {
+                $registeredClients = User::where('role', 'client')
+                    ->withCount('orders')
+                    ->withSum('orders', 'total_amount')
+                    ->get();
+
+                foreach ($registeredClients as $client) {
+                    fputcsv($file, [
+                        $client->name,
+                        $client->email,
+                        $client->phone_number ?? '-',
+                        $client->orders_count,
+                        $client->orders_sum_total_amount ?? 0,
+                        "'" . optional($client->created_at)->format('Y-m-d H:i:s'),
+                    ]);
+                }
+            }
+
+            /*
+            ========================
+            WALK-IN CLIENTS
+            ========================
+            */
+            if ($type === 'all' || $type === 'walkin') {
+                $walkInClients = Order::whereNull('user_id')
+                    ->selectRaw('
+                        customer_name,
+                        email,
+                        phone_number,
+                        COUNT(*) as orders_count,
+                        COALESCE(SUM(total_amount), 0) as total_spent,
+                        MAX(created_at) as last_order
+                    ')
+                    ->groupBy('customer_name', 'email', 'phone_number')
+                    ->get();
+
+                foreach ($walkInClients as $client) {
+                    fputcsv($file, [
+                        $client->customer_name,
+                        $client->email,
+                        $client->phone_number ?? '-',
+                        $client->orders_count,
+                        $client->total_spent,
+                        "'" . \Carbon\Carbon::parse($client->last_order)->format('Y-m-d H:i:s'),
+                    ]);
+                }
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }

@@ -23,7 +23,7 @@
         <!-- TOP -->
         <div>
             <!-- LOGO -->
-            <div class="flex items-center gap-3 p-6 border-b">
+            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-200 h-[73px]">
                 <img src="{{ asset('images/logo.jpg') }}"
                     class="w-10 h-10 rounded-full object-cover">
                 <h1 class="font-semibold text-lg">Sprint PHL</h1>
@@ -104,8 +104,8 @@
     <main class="flex-1 w-full md:ml-64 min-w-0 overflow-x-hidden max-w-full">
 
         <!-- PAGE HEADER -->
-        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 overflow-x-hidden">
-            <div class="flex items-center justify-between gap-2">
+        <div class="px-6 py-4 border-b border-gray-200 overflow-x-hidden h-[73px] flex items-center">
+            <div class="flex items-center justify-between gap-2 w-full">
 
                 <!-- PAGE TITLE (from each page's @section('header')) -->
                 <div class="flex-1 min-w-0">

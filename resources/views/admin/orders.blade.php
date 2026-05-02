@@ -96,7 +96,7 @@ m
 </h2>
 
 <!-- TABLE -->
-<div class="bg-white rounded-2xl shadow p-4" style="border:solid #00000010; border-radius: 14px; border-width: 0.8px;">
+<div class="bg-white rounded-2xl shadow p-4 mt-6" style="border:solid #00000010; border-radius: 14px; border-width: 0.8px;">
     <div class="overflow-x-auto overflow-y-auto" style="max-height: 500px;">
         <table class="w-full text-sm" style="min-width: 650px;">
             <thead class="text-left text-gray-500 border-b">
@@ -219,15 +219,14 @@ m
                             <div class="flex gap-2">
 
                                 <!-- VIEW -->
-                                <button type="button" 
-                                    onclick="openOrderModal('{{ $order->order_id }}')"
+                                <a href="{{ route('admin.orders.show', $order->order_id)}}"
                                     class="px-3 py-2 text-sm bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200">
                                     View
-                                </button>
+                                </a>
 
                                 <!-- EDIT -->
                                 <a href="{{ route('admin.orders.edit', $order->order_id) }}"
-                                class="px-3 py-2 text-sm bg-yellow-100 text-yellow-600 rounded-lg hover:bg-yellow-200">
+                                    class="px-3 py-2 text-sm bg-yellow-100 text-yellow-600 rounded-lg hover:bg-yellow-200">
                                     Edit
                                 </a>
 

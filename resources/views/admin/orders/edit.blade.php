@@ -9,11 +9,6 @@
         <h1 class="text-2xl font-semibold">
             Edit Order #ORD-{{ str_pad($order->order_id, 3, '0', STR_PAD_LEFT) }}
         </h1>
-
-        <a href="{{ route('admin.orders.index') }}"
-           class="px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200">
-            ← Back
-        </a>
     </div>
 
     <form action="{{ route('admin.orders.update', $order->order_id) }}" method="POST"
@@ -106,8 +101,11 @@
             readonly>
         </div>
 
-        <!-- SUBMIT -->
-        <div class="flex justify-end">
+        <div class="flex justify-between items-center gap-3 mt-6">
+            <a href="{{ route('admin.orders.index') }}"
+            class="inline-flex items-center px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200">
+                ← Back
+            </a>
             <button type="submit"
                 class="px-6 py-2 text-white rounded-lg"
                 style="background-color: #D47497;">

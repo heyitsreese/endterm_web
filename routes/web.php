@@ -155,12 +155,6 @@ Route::middleware('admin.session')->prefix('admin')->name('admin.')->group(funct
     Route::post('/orders/{id}/read', [AdminController::class, 'markAsRead'])
         ->name('orders.read');
 
-    Route::get('/orders/export', [AdminController::class, 'exportOrders'])
-        ->name('orders.export');
-    
-    Route::get('/admin/clients/export', [AdminController::class, 'export'])
-        ->name('admin.clients.export');
-
     Route::get('/settings', [AdminController::class, 'settings'])
         ->name('settings');
 
