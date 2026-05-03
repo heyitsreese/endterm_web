@@ -50,39 +50,12 @@ Route::post('/login', function (Request $request) {
 
 })->name('login');
 
-// CLIENT
-Route::middleware(['web', 'auth.session'])->prefix('client')->group(function () {
-
-    Route::get('/dashboard', [ClientController::class, 'dashboard'])
-        ->name('client.dashboard');
-
-    Route::get('/create-order', function () {
-        $products = \App\Models\Product::where('status', 'active')->get();
-        return view('client.create-order', compact('products'));
-    })->name('client.create-order');
-
-    Route::post('/store-order', [OrderController::class, 'store'])
-        ->name('client.order.store');
-
-    Route::get('/order-success/{id}', function ($id) {
-
-        $order = \App\Models\Order::findOrFail($id);
-
-        $code = 'ORD-' . str_pad($order->order_id, 4, '0', STR_PAD_LEFT);
-
-        return view('client.order-success', compact('order', 'code'));
-        
-    })->name('client.order.success');
-
-    Route::get('/orders/{id}/json', [ClientController::class, 'showOrder'])
-        ->name('client.order.show');
-
-    Route::get('/orders/{id}/download/{detailIndex}', [ClientController::class, 'downloadFile'])
-        ->name('client.order.download');
-
-    Route::get('/track', [ClientController::class, 'track'])
-        ->name('client.track');
-
+// ADMIN
+Route::middleware('admin.session')->group(function () {
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])
+        ->name('admin.dashboard');
+    Route::get('/admin/settings', [AdminController::class, 'settings'])
+        ->name('admin.settings');
 });
 
 // ADMIN

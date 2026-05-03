@@ -916,4 +916,14 @@ class AdminController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    public function settings()
+    {
+        $admin = User::where('user_id', session('user_id'))->first();
+
+        // Also fetch totalOrders to show badge in the sidebar
+        $totalOrders = Order::count();
+
+        return view('admin.settings', compact('admin', 'totalOrders'));
+    }
 }
