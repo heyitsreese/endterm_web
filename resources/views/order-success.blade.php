@@ -39,7 +39,7 @@
 
             <p class="text-sm text-gray-500 mt-4">
                 <i class="fa-regular fa-envelope"></i>
-                An admin will send an order confirmation to: <b>{{ $email ?? 'your@email.com' }}</b>
+                Order confirmation sent to: {{ $email ?? 'your@email.com' }}
             </p>
 
         </div>
