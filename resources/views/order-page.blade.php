@@ -69,21 +69,17 @@
             </p>
 
             <!-- FORM -->
-            <form class="space-y-5" method="POST" action="{{ route('order.step1.store') }}">
+            <form class="space-y-5" method="POST" action="{{ route('order.step2') }}">
                 @csrf
-
-                <input type="hidden" name="product_id" value="{{ $productId ?? '' }}">
 
                 <!-- Name -->
                 <div>
                     <label class="text-sm font-medium flex items-center gap-2">
                         <i class="fa-regular fa-user text-gray-400"></i>
-                        Your Full Name<span class="text-red-600">*</span>
+                        Your Full Name
                     </label>
                     <input type="text"
                            name="name"
-                           required
-                           value="{{ session('name') }}"
                            placeholder="John Smith"
                            class="w-full mt-1 px-4 py-3 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-400">
                 </div>
@@ -92,15 +88,12 @@
                 <div>
                     <label class="text-sm font-medium flex items-center gap-2">
                         <i class="fa-regular fa-envelope text-gray-400"></i>
-                        Email Address<span class="text-red-600">*</span>
+                        Email Address
                     </label>
                     <input type="email"
-                    name="email"
-                    required
-                    value="{{ session('email') }}"
-                    pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-                    placeholder="john@example.com"
-                    class="w-full mt-1 px-4 py-3 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                           name="email"
+                           placeholder="john@example.com"
+                           class="w-full mt-1 px-4 py-3 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-400">
 
                     <p class="text-xs text-gray-400 mt-1">
                         We'll send your order ID and updates here
@@ -111,18 +104,12 @@
                 <div>
                     <label class="text-sm font-medium flex items-center gap-2">
                         <i class="fa-solid fa-phone text-gray-400"></i>
-                        Phone Number<span class="text-red-600">*</span>
+                        Phone Number <span class="text-gray-400">(Optional)</span>
                     </label>
-               <input type="text"
-                name="phone"
-                id="phone"
-                required
-                value="{{ old('phone', session('phone')) }}"
-                pattern="\+63\s9\d{2}\s\d{3}\s\d{4}"
-                maxlength="17"
-                placeholder="+63 917 123 4567"
-                title="Enter a valid PH number (e.g. +63 917 123 4567)"
-                class="w-full mt-1 px-4 py-3 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <input type="text"
+                           name="phone"
+                           placeholder="+63 912 345 6789"
+                           class="w-full mt-1 px-4 py-3 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-400">
                 </div>
 
                 <!-- CONTINUE BUTTON -->
@@ -155,49 +142,5 @@
     </div>
 
 </section>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const phoneInput = document.getElementById("phone");
-
-    function formatPhone(value) {
-        // remove non-digits
-        let digits = value.replace(/\D/g, "");
-
-        // remove leading 63 if present
-        if (digits.startsWith("63")) {
-            digits = digits.slice(2);
-        }
-
-        // limit to 10 digits (9XXXXXXXXX)
-        digits = digits.substring(0, 10);
-
-        let formatted = "+63 ";
-
-        if (digits.length > 0) {
-            formatted += digits.substring(0, 3);
-        }
-        if (digits.length > 3) {
-            formatted += " " + digits.substring(3, 6);
-        }
-        if (digits.length > 6) {
-            formatted += " " + digits.substring(6, 10);
-        }
-
-        return formatted;
-    }
-
-    phoneInput.addEventListener("input", function () {
-        phoneInput.value = formatPhone(phoneInput.value);
-    });
-
-    // Only enforce +63 prefix if empty
-    phoneInput.addEventListener("focus", function () {
-        if (!phoneInput.value) {
-            phoneInput.value = "+63 ";
-        }
-    });
-});
-</script>
 
 @endsection
