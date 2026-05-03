@@ -10,14 +10,20 @@ class OrderDetail extends Model
 {
     protected $primaryKey = 'order_details_id';
 
+    public $incrementing = true;
+    protected $keyType = 'int';
+
     protected $fillable = [
         'order_id',
         'product_id',
         'quantity',
-        'size',
+        'size',          
         'color',
         'paper_quality',
-        'special_instruction'
+        'special_instruction',
+        'file_path',
+        'price',       
+        'subtotal',     
     ];
 
     public function order()

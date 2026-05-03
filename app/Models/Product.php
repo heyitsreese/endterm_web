@@ -10,7 +10,12 @@ class Product extends Model
 
     protected $fillable = [
         'product_name',
-        'base_price'
+        'base_price',
+        'category',
+        'min_quantity',
+        'turnaround',
+        'status',
+        'image'
     ];
 
     public function orderDetails()

@@ -1,4 +1,3 @@
-
 @extends('layouts.content')
 
 @section('content')
@@ -19,10 +18,21 @@
             Sign in to your printing management account
         </p>
 
-        {{-- ERROR --}}
+        {{-- SESSION ERROR --}}
         @if(session('error'))
             <div class="bg-red-100 text-red-600 text-sm p-3 rounded mb-4">
                 {{ session('error') }}
+            </div>
+        @endif
+
+        {{-- VALIDATION ERRORS --}}
+        @if ($errors->any())
+            <div class="bg-red-100 text-red-600 text-sm p-3 rounded mb-4">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>• {{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
@@ -33,6 +43,7 @@
             <div class="mb-4">
                 <label class="text-sm font-medium">Email</label>
                 <input type="email" name="email" required
+                    value="{{ old('email') }}"
                     placeholder="name@example.com"
                     class="w-full mt-1 px-3 py-2 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400">
             </div>
@@ -41,11 +52,12 @@
             <div class="mb-4">
                 <label class="text-sm font-medium">Password</label>
                 <div class="relative">
-                    <input type="password" name="password" required
+                    <input type="password" name="password" id="password" required
                         placeholder="Enter your password"
                         class="w-full mt-1 px-3 py-2 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400">
 
-                    <i data-feather="eye"
+                    <i id="togglePassword"
+                       data-feather="eye"
                        class="absolute right-3 top-3 w-4 h-4 text-gray-400 cursor-pointer"></i>
                 </div>
             </div>
@@ -53,7 +65,7 @@
             <!-- OPTIONS -->
             <div class="flex justify-between items-center text-sm mb-4">
                 <label class="flex items-center gap-2">
-                    <input type="checkbox">
+                    <input type="checkbox" name="remember">
                     Remember me
                 </label>
 
@@ -81,11 +93,30 @@
         <!-- SIGN UP -->
         <p class="text-center text-sm text-gray-500">
             Don't have an account?
-            <a href="#" class="text-pink-500">Sign up</a>
+            <a href="{{ route('register') }}" class="text-pink-500 hover:underline">
+                Sign up
+            </a>
         </p>
 
     </div>
 
 </div>
+
+<!-- PASSWORD TOGGLE SCRIPT -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const togglePassword = document.getElementById('togglePassword');
+    const password = document.getElementById('password');
+
+    if (togglePassword && password) {
+        togglePassword.addEventListener('click', function () {
+            const type = password.type === 'password' ? 'text' : 'password';
+            password.type = type;
+        });
+    }
+
+});
+</script>
 
 @endsection

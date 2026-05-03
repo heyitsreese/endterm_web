@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Sprint PHL</title>
+    <title>Client - Sprint PHL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://kit.fontawesome.com/97c3b6d53c.js" crossorigin="anonymous"></script>
@@ -23,7 +23,7 @@
         <!-- TOP -->
         <div>
             <!-- LOGO -->
-            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-200 h-[73px]">
+            <div class="flex items-center gap-3 px-6 h-[88px] border-b">
                 <img src="{{ asset('images/logo.jpg') }}"
                     class="w-10 h-10 rounded-full object-cover">
                 <h1 class="font-semibold text-lg">Sprint PHL</h1>
@@ -32,37 +32,10 @@
             <!-- NAV -->
             <nav class="p-4 space-y-2 text-sm">
 
-                <!-- ACTIVE -->
-                <a href="{{ url('admin/dashboard') }}" class="flex items-center gap-3 px-4 py-2 rounded-xl {{ request()->is('admin/dashboard') ? 'bg-pink-100 text-pink-600 font-medium' : 'hover:bg-gray-100' }}">
+                <a href="{{ route('client.dashboard') }}"
+                    class="flex items-center gap-3 px-4 py-2 rounded-xl 
+                    {{ request()->is('client/dashboard') ? 'bg-pink-100 text-pink-600 font-medium' : 'hover:bg-gray-100' }}">
                     <i data-feather="grid"></i> Dashboard
-                </a>
-
-                <!-- ORDERS -->
-                <a href="{{ url('admin/orders') }}" class="flex items-center justify-between px-4 py-2 rounded-xl {{ request()->is('admin/orders') ? 'bg-pink-100 text-pink-600 font-medium' : 'hover:bg-gray-100' }}">
-                    <div class="flex items-center gap-3">
-                        <i data-feather="shopping-bag"></i> Orders
-                    </div>
-
-                    <span class="bg-pink-400 text-white text-xs px-2 py-0.5 rounded-full">
-                        {{ $pendingOrders ?? 0 }}
-                    </span>
-                </a>
-
-                <a href="{{ url('admin/clients') }}" class="flex items-center justify-between px-4 py-2 rounded-xl {{ request()->is('admin/clients') ? 'bg-pink-100 text-pink-600 font-medium' : 'hover:bg-gray-100' }}">
-                    <div class="flex items-center gap-3">    
-                        <i data-feather="users"></i>
-                            Clients
-                    </div>
-                </a>
-
-                <a href="{{ url('admin/products') }}" class="flex items-center gap-3 px-4 py-2 rounded-xl {{ request()->is('admin/products') ? 'bg-pink-100 text-pink-600 font-medium' : 'hover:bg-gray-100' }}">
-                    <i data-feather="box"></i>
-                    Products
-                </a>
-
-                <a href="{{ url('admin/settings') }}" class="flex items-center gap-3 px-4 py-2 rounded-xl {{ request()->is('admin/settings') ? 'bg-pink-100 text-pink-600 font-medium' : 'hover:bg-gray-100' }}">
-                    <i data-feather="settings"></i>
-                    Settings
                 </a>
 
             </nav>
@@ -72,19 +45,14 @@
         <div class="p-4 border-t flex items-center justify-between">
 
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-pink-400 flex items-center justify-center text-white font-semibold">
-     {{ strtoupper(substr(session('user_name', 'Admin'), 0, 1) . substr(strrchr(session('user_name', 'Admin'), ' '), 1, 1)) }}
-        </div>
+                <div class="w-10 h-10 rounded-full bg-pink-400 text-white flex items-center justify-center font-bold">
+                    {{ strtoupper(substr(session('user_name') ?? 'U', 0, 2)) }}
+                </div>
 
-                    <div>
-            <p class="font-semibold">
-                {{ session('user_name', 'Admin') }}
-            </p>
-
-            <p class="text-sm text-gray-500">
-                {{ session('user_email', 'admin@email.com') }}
-            </p>
-        </div>
+                <div>
+                    <p class="text-sm font-medium">{{ session('user_name') ?? 'Client' }}</p>
+                    <p class="text-xs text-gray-500">{{ session('user_email') ?? '' }}</p>
+                </div>
             </div>
 
             <button type="button" onclick="openLogoutModal()" class="text-gray-500 hover:text-red-500 transition">
@@ -104,51 +72,12 @@
     <main class="flex-1 w-full md:ml-64 min-w-0 overflow-x-hidden max-w-full">
 
         <!-- PAGE HEADER -->
-        <div class="px-6 py-4 border-b border-gray-200 overflow-x-hidden h-[73px] flex items-center">
-            <div class="flex items-center justify-between gap-2 w-full">
+        <div class="px-6 h-[88px] border-b border-gray-200 flex items-center">
+            <div class="flex items-center w-full">
 
                 <!-- PAGE TITLE (from each page's @section('header')) -->
                 <div class="flex-1 min-w-0">
                     @yield('header')
-                </div>
-
-                <!-- GLOBAL: search + bell -->
-                <div class="flex items-center gap-2 shrink-0">
-                    <form action="{{ url('admin/orders') }}" method="GET" class="relative">
-                        <div class="absolute inset-y-0 left-3 flex items-center text-gray-400">
-                            <i data-feather="search" class="w-4 h-4"></i>
-                        </div>
-                        <input type="text" name="search" placeholder="Search..."
-                                value="{{ request('search') }}"
-                                class="pl-9 pr-3 py-2 rounded-xl bg-gray-50 border border-transparent
-                                    focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white
-                                    text-sm text-gray-600 placeholder-gray-400 font-medium
-                                    transition-all"
-                                style="width: clamp(80px, 25vw, 224px);">
-                    </form>
-
-                    <div class="relative shrink-0">
-                        <button id="notifBtn" class="text-gray-500 hover:text-gray-700 transition relative">
-                            <i data-feather="bell" class="w-5 h-5"></i>
-                            @if(($unreadOrdersCount ?? 0) > 0)
-                                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                                    {{ $unreadOrdersCount }}
-                                </span>
-                            @endif
-                        </button>
-                        <div id="notifDropdown" class="hidden fixed top-14 right-2 w-64 bg-white shadow-lg rounded-xl p-4 z-[999]">
-                            <h3 class="font-semibold mb-2 text-sm">Recent Orders</h3>
-                            @forelse($pendingNotifications ?? [] as $order)
-                                <div data-id="{{ $order->order_id }}"
-                                    onclick="markAsRead(this.dataset.id)"
-                                    class="border-b py-2 text-xs text-gray-600 cursor-pointer hover:bg-gray-50 rounded px-2">
-                                    Order #{{ $order->order_id }} - {{ ucfirst(str_replace('_', ' ', $order->status)) }}
-                                </div>
-                            @empty
-                                <p class="text-gray-400 text-xs">No recent orders</p>
-                            @endforelse
-                        </div>
-                    </div>
                 </div>
 
             </div>
@@ -245,16 +174,7 @@ window.addEventListener('resize', function () {
 </script>
 
 <script>
-    function refreshFeather() {
-        if (typeof feather !== 'undefined') feather.replace();
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', refreshFeather);
-    } else {
-        refreshFeather();
-    }
-    window.addEventListener('load', refreshFeather);
-    window.refreshFeather = refreshFeather;
+    feather.replace()
 </script>
 
 <script>
@@ -428,22 +348,24 @@ function toggleDay(checkbox) {
 const notifBtn = document.getElementById('notifBtn');
 const notifDropdown = document.getElementById('notifDropdown');
 
-notifBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    
-    // Position dropdown below the bell button
-    const rect = notifBtn.getBoundingClientRect();
-    notifDropdown.style.top = (rect.bottom + 8) + 'px';
-    notifDropdown.style.right = (window.innerWidth - rect.right) + 'px';
-    
-    notifDropdown.classList.toggle('hidden');
-});
+if (notifBtn && notifDropdown) {
+    notifBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        // Position dropdown below the bell button
+        const rect = notifBtn.getBoundingClientRect();
+        notifDropdown.style.top = (rect.bottom + 8) + 'px';
+        notifDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+        
+        notifDropdown.classList.toggle('hidden');
+    });
 
-document.addEventListener('click', function(e) {
-    if (!notifDropdown.contains(e.target) && e.target !== notifBtn) {
-        notifDropdown.classList.add('hidden');
-    }
-});
+    document.addEventListener('click', function(e) {
+        if (!notifDropdown.contains(e.target) && e.target !== notifBtn) {
+            notifDropdown.classList.add('hidden');
+        }
+    });
+}
 </script>
 
 <script>
@@ -460,6 +382,6 @@ function markAsRead(orderId) {
     });
 }
 </script>
-@stack('scripts')
+
 </body>
 </html>

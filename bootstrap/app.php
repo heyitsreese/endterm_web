@@ -12,8 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function ($middleware) {
         $middleware->alias([
+            'auth.session' => \App\Http\Middleware\AuthSession::class,
             'admin.session' => \App\Http\Middleware\AdminSession::class,
-            'auth' => \App\Http\Middleware\Authenticate::class,
         ]);
     })
 
